@@ -45,6 +45,30 @@ tile_images = {
     5: load_image("doorshadow.png"),
 }
 
+def find_tile(tile_value, tile_map):
+    for y, row in enumerate(tile_map):
+        for x, tile in enumerate(row):
+            if tile == tile_value:
+                return x, y
+    return None
+
+# Walkability
+def is_walkable(x, y):
+    if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
+        return current_map[y][x] not in (2, 3)
+    return False
+
+player_image = load_image('Player.png')
+current_map = map_one
+player_pos = list(find_tile(5, current_map))
+
+# Draw player
+def draw_player():
+    screen.blit(player_image, (player_pos[0] * TILE_SIZE, player_pos[1] * TILE_SIZE))
+
+    
+    
+
 # Main loop
 running = True
 
@@ -54,14 +78,19 @@ while running:
             running = False
 
     # Draw map
-    for y in range(MAP_HEIGHT):
-        for x in range(MAP_WIDTH):
-            tile = map_one[y][x]
-            screen.blit(
-                tile_images[tile],
-                (x * TILE_SIZE, y * TILE_SIZE)
-            )
+# Draw map
+for y in range(MAP_HEIGHT):
+    for x in range(MAP_WIDTH):
+        tile = map_one[y][x]
+        screen.blit(
+            tile_images[tile],
+            (x * TILE_SIZE, y * TILE_SIZE)
+        )
 
-    pygame.display.flip()
+# Draw player ON TOP of the map
+draw_player()
+
+pygame.display.flip()
+
 
 pygame.quit()
