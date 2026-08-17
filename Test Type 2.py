@@ -103,6 +103,35 @@ def update_player_movement():
         if moved:
             player_pos = [new_x, new_y]
             last_move_time = current_time
+
+def print_map(grid):
+    """Helper function to print the map nicely."""
+    for row in grid:
+        print(" ".join(str(cell) for cell in row))
+    print("-" * 20)
+
+# 1. Print the starting map
+print("Starting Map:")
+print_map(map_one)
+
+try:
+    # 2. Ask user for directions/coordinates
+    # Remember: Python lists are 0-indexed (0 to 9 for a 10x10 grid)
+    row = int(input("Enter row index (0-9): "))
+    col = int(input("Enter column index (0-9): "))
+    new_val = int(input("Enter new value for this tile: "))
+
+    # 3. Update the specific grid position directly
+    map_one[row][col] = new_val
+
+    # 4. Show the updated map
+    print("\nUpdated Map:")
+    print_map(map_one)
+
+except IndexError:
+    print("Error: Coordinate out of bounds! Choose numbers between 0 and 9.")
+except ValueError:
+    print("Error: Please enter numbers only.")
   
     
 
@@ -137,3 +166,5 @@ while running:
 
 
 pygame.quit()
+
+

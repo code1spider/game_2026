@@ -3,6 +3,11 @@ import os
 import time
 
 pygame.init()
+clock = pygame.time.Clock()
+
+# Variables to track movement cooldown (in milliseconds)
+MOVE_COOLDOWN = 200  # 0.2 seconds = 200ms
+last_move_time = 0
 
 # Constants
 TILE_SIZE = 40
@@ -67,7 +72,38 @@ player_pos = list(find_tile(5, current_map))
 def draw_player():
     screen.blit(player_image, (player_pos[0] * TILE_SIZE, player_pos[1] * TILE_SIZE))
 
-    
+def update_player_movement():
+    global player_pos, last_move_time
+    current_time = pygame.time.get_ticks()
+    new_x, new_y = player_pos
+    keys = pygame.key.get_pressed()
+
+    # 2. Check if enough time has passed since the last move
+    if current_time - last_move_time >= MOVE_COOLDOWN:
+        moved = False
+
+        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+            if is_walkable(new_x - 1, new_y):
+                new_x -= 1
+                moved = True
+        elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+            if is_walkable(new_x + 1, new_y):
+                new_x += 1
+                moved = True
+        elif keys[pygame.K_w] or keys[pygame.K_UP]:
+            if is_walkable(new_x, new_y - 1):
+                new_y -= 1
+                moved = True
+        elif keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            if is_walkable(new_x, new_y + 1):
+                new_y += 1
+                moved = True
+
+        # 3. If the player moved, update the position and reset the cooldown timer
+        if moved:
+            player_pos = [new_x, new_y]
+            last_move_time = current_time
+  
     
 
 # Main loop- needed for the game to stay active
@@ -79,6 +115,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    update_player_movement()
     # Draw map
     for y in range(MAP_HEIGHT):
         for x in range(MAP_WIDTH):
@@ -91,32 +128,12 @@ while running:
     # Draw player
     draw_player()
 
-    new_x, new_y = player_pos
-    player_pos = [new_x, new_y]
 
     # Update the display as per FPS
     pygame.display.flip()
+    clock.tick(60)  
 
     # Movement logic for player
-    keys = pygame.key.get_pressed()
 
-    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-        if is_walkable(new_x - 1, new_y):
-            new_x -= 1
-            time.sleep(0.2)
-    elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-        if is_walkable(new_x + 1, new_y):
-            new_x += 1
-            time.sleep(0.2)
-    elif keys[pygame.K_w] or keys[pygame.K_UP]:
-        if is_walkable(new_x, new_y - 1):
-            new_y -= 1
-            time.sleep(0.2)
-    elif keys[pygame.K_s] or keys[pygame.K_DOWN]:
-        if is_walkable(new_x, new_y + 1):
-            new_y += 1
-            time.sleep(0.2)
-
-    player_pos = [new_x, new_y]
 
 pygame.quit()
