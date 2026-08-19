@@ -1,6 +1,7 @@
 import pygame
 import os
 import time
+from pynput import keyboard
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -110,26 +111,28 @@ def print_map(grid):
         print(" ".join(str(cell) for cell in row))
     print("-" * 20)
 
-try:
-    # 2. Ask user for directions/coordinates
-    # Remember: Python lists are 0-indexed (0 to 9 for a 10x10 grid)
-    row = int(input("Enter row index (0-9): "))
-    col = int(input("Enter column index (0-9): "))
-    new_val = int(input("Enter new value for this tile: "))
+if key == keyboard.Key.down:
 
-    # 3. Update the specific grid position directly
-    map_one[row][col] = new_val
+    try:
+        # 2. Ask user for directions/coordinates
+        # Remember: Python lists are 0-indexed (0 to 9 for a 10x10 grid)
+        row = int(input("Enter row index (0-9): "))
+        col = int(input("Enter column index (0-9): "))
+        new_val = int(input("Enter new value for this tile: "))
 
-    # 4. Show the updated map
-    print("\nUpdated Map:")
-    print_map(map_one)
+        # 3. Update the specific grid position directly
+        map_one[row][col] = new_val
 
-#will occur if the row and index are not correctly usable
-except IndexError:
-    print("Error: Coordinate out of bounds! Choose numbers between 0 and 9.")
-except ValueError:
-    print("Error: Please enter numbers only.")
-  
+        # 4. Show the updated map
+        print("\nUpdated Map:")
+        print_map(map_one)
+
+    #will occur if the row and index are not correctly usable
+    except IndexError:
+        print("Error: Coordinate out of bounds! Choose numbers between 0 and 9.")
+    except ValueError:
+        print("Error: Please enter numbers only.")
+    
     
 
 # Main loop- needed for the game to stay active
