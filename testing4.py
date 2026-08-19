@@ -111,7 +111,7 @@ def print_map(grid):
         print(" ".join(str(cell) for cell in row))
     print("-" * 20)
 
-if key == keyboard.Key.down:
+if tile == 0:
 
     try:
         # 2. Ask user for directions/coordinates
