@@ -5,6 +5,8 @@ import time
 pygame.init()
 clock = pygame.time.Clock()
 
+running = True
+
 #HIDDEN SETTINGS
 
 # Variables to track movement cooldown (in milliseconds)
@@ -114,6 +116,78 @@ def update_player_movement():
             last_move_time = current_time
 
 # INPUTS (will need to put HOW I'm going to change my game in here)
+
+Input_boxes = {
+    'row': pygame.Rect(
+        10, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
+    
+    'Column': pygame.Rect(90, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
+
+    "Value":  pygame.Rect(210, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
+
+}
+
+input_text = {
+    'row': '',
+    'Column': '',
+    'Value': ''
+}
+
+selected_box = None #makes the selected box none at default, so boxes arent randomly selected
+
+Button_Rect = pygame.Rect(310, MAP_HEIGHT * TILE_SIZE + 10, 100, 35)
+
+#MESSAGE
+
+Status_message = '' #AKA nothing by, just making empty space for WHEN it is called
+
+#TILE CHANGING LOGIC
+
+def tile_edit():
+    global status_message
+
+    try:
+
+        row = int(input_text["row"])
+        col = int(input_text["col"])
+        new_val = int(input_text["value"])
+
+        #check if cordinates value is valid
+        if not (0 <= row < MAP_HEIGHT):
+            Status_message = 'Column must be withing 0 and 9.'
+            return
+
+        if not (0 <= row < MAP_WIDTH):
+            Status_message = 'Column must be withing 0 and 9.'
+            return
+#check if tile value even exists
+        if new_val not in tile_images:
+            Status_message = 'Tile number not valid.'
+            return
+
+#actually changing the tile
+        current_map[row][column] = new_val
+
+        Status_message = 'success'
+
+    except ValueError:
+
+        Status_message ='Error'
+
+#Draw functions
+
+def draw_input_boxes():
+
+    control_y = MAP_HEIGHT * TILE_SIZE
+
+    pygame.draw.rect(screen, (30, 30, 30),(0, control_y, SCREEN WIDTH, 90)
+    )
+
+    screen.blit(row_label, (10, control_y + 47))
+    screen.blit(column_label, (110, control_y + 47))
+    screen.blit(value_label, (210, control_y + 47))
+
+# Draw actual input boxes
 
 def print_map(grid):
     """Helper function to print the map nicely."""
