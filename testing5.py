@@ -5,8 +5,6 @@ import time
 pygame.init()
 clock = pygame.time.Clock()
 
-running = True
-
 #HIDDEN SETTINGS
 
 # Variables to track movement cooldown (in milliseconds)
@@ -22,7 +20,7 @@ screen = pygame.display.set_mode(
     (MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE)
 )
 pygame.display.set_caption("Map 1")
-
+FONT = pygame.font.Font(None, 28)
 #MAP
 
 # Map 1
@@ -133,13 +131,13 @@ input_text = {
     'Value': ''
 }
 
-selected_box = None #makes the selected box none at default, so boxes arent randomly selected
+active_box = None #makes the selected box none at default, so boxes arent randomly selected
 
-Button_Rect = pygame.Rect(310, MAP_HEIGHT * TILE_SIZE + 10, 100, 35)
+BUTTON_RECT = pygame.Rect(310, MAP_HEIGHT * TILE_SIZE + 10, 100, 35)
 
 #MESSAGE
 
-Status_message = '' #AKA nothing by, just making empty space for WHEN it is called
+status_message = '' #AKA nothing by, just making empty space for WHEN it is called
 
 #TILE CHANGING LOGIC
 
@@ -180,7 +178,7 @@ def draw_input_boxes():
 
     control_y = MAP_HEIGHT * TILE_SIZE
 
-    pygame.draw.rect(screen, (30, 30, 30),(0, control_y, SCREEN WIDTH, 90)
+    pygame.draw.rect(screen, (30, 30, 30),(0, control_y, SCREEN_WIDTH, 90)
     )
 
     screen.blit(row_label, (10, control_y + 47))
@@ -188,56 +186,104 @@ def draw_input_boxes():
     screen.blit(value_label, (210, control_y + 47))
 
 # Draw actual input boxes
+for name, rect in Input_boxes.items():
 
-def print_map(grid):
-    """Helper function to print the map nicely."""
-    for row in grid:
-        print(" ".join(str(cell) for cell in row))
-    print("-" * 20)
+    if active_box == name:
+        color = (100, 80, 60)
+    else:
+        color = (200, 160, 120)
 
-while running:
-    def test():
+    pygame.draw.rect(screen, color, rect, 2)
 
-        keys = pygame.key.get_pressed()
+    text_surface = FONT.render(input_text[name], True, (255, 255, 255))
 
-        if keys[pygame.K_b]:
+    screen.blit(text_surface,(
+        rect.x + 5,
+        rect.y + 10
+    ))
 
-            try:
-                # 2. Ask user for directions/coordinates
-                # Remember: Python lists are 0-indexed (0 to 9 for a 10x10 grid)
-                row = int(input("Enter row index (0-9): "))
-                col = int(input("Enter column index (0-9): "))
-                new_val = int(input("Enter new value for this tile: "))
+# DRAW CHANGE BUTTON
+    pygame.draw.rect(screen, (70, 200, 70), BUTTON_RECT)
 
-                # 3. Update the specific grid position directly
-                map_one[row][col] = new_val
+    button_text = FONT.render('change', True, (0,0,0))
 
-                # 4. Show the updated map
-                print("\nUpdated Map:")
-                print_map(map_one)
+    screen.blit(button_text, 
+    (BUTTON_RECT.x + 5, 
+    BUTTON_RECT.y + 3))
 
-            #will occur if the row and index are not correctly usable
-            except IndexError:
-                print("Error: Coordinate out of bounds! Choose numbers between 0 and 9.")
-            except ValueError:
-                print("Error: Please enter numbers only.")
-    
+    #Draw in the status messages
+    status_text = FONT.render(status_message, True, (255, 220, 200))
 
-#MAIN LOOP
+    screen.blit(status_text, (400, control_y + 20))
 
-# Needed for Pygame to run
+#main game loop
+
 running = True
 
+
 while running:
+
+    #python events
+
+
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
+        #mouse click code
+    
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+
+            active_box = None
+
+            #check input boxes
+            for name, rect in Input_boxes.items():
+
+                if rect.collidepoint(event.pos):
+                    active_box = name
+
+            #check swapping/change button
+            if BUTTON_RECT.collidepoint(event.pos):
+                change.tile()
+
+#KEYBOARD INPUTS
+
+        elif event.type == pygame.KEYDOWN:
+
+            #only works if a box is selected
+            if active_box is not None:
+
+            #backspace
+                if event.key == pygame.K_BACKSPACE:
+
+                    input_text[active_box] = (
+                        input_text[active_box][:-1]
+                    )
+
+
+                #enter
+                if event.key == pygame.K_RETURN:
+
+                    change_tile()
+
+                    #number keys
+                elif event.unicode.isdigit():
+
+                    input_text[active_box] += event.unicode
+
+#player movement
+
     update_player_movement()
-    # Draw map
+
+# Draw map
+
     for y in range(MAP_HEIGHT):
+
         for x in range(MAP_WIDTH):
+
             tile = current_map[y][x]
+
             screen.blit(
                 tile_images[tile],
                 (x * TILE_SIZE, y * TILE_SIZE)
@@ -246,6 +292,9 @@ while running:
     # Draw player
     draw_player()
 
+    #draw input controls
+
+    draw_Input_boxes()
 
     # Update the display as per FPS
     pygame.display.flip()
