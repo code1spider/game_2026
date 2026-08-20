@@ -1,10 +1,11 @@
 import pygame
 import os
 import time
-running = True
 
 pygame.init()
 clock = pygame.time.Clock()
+
+#HIDDEN SETTINGS
 
 # Variables to track movement cooldown (in milliseconds)
 MOVE_COOLDOWN = 200  # 0.2 seconds = 200ms
@@ -20,6 +21,8 @@ screen = pygame.display.set_mode(
 )
 pygame.display.set_caption("Map 1")
 
+#MAP
+
 # Map 1
 map_one = [
     [0, 0, 4, 3, 3, 3, 3, 4, 2, 0],
@@ -34,7 +37,8 @@ map_one = [
     [0, 0, 0, 0, 5, 5, 0, 0, 0, 0],
 ]
 
-# Load image
+# LOAD IMAGES
+
 def load_image(name):
     path = os.path.join("assets", name)
     return pygame.transform.scale(
@@ -52,12 +56,16 @@ tile_images = {
     5: load_image("doorshadow.png"),
 }
 
+#MAP PLAYER INTERACTIONS
+
 def find_tile(tile_value, tile_map):
     for y, row in enumerate(tile_map):
         for x, tile in enumerate(row):
             if tile == tile_value:
                 return x, y
     return None
+
+#MOVEMENT
 
 # Walkability
 def is_walkable(x, y):
@@ -105,6 +113,8 @@ def update_player_movement():
             player_pos = [new_x, new_y]
             last_move_time = current_time
 
+# INPUTS (will need to put HOW I'm going to change my game in here)
+
 def print_map(grid):
     """Helper function to print the map nicely."""
     for row in grid:
@@ -139,8 +149,11 @@ while running:
                 print("Error: Please enter numbers only.")
     
 
+#MAIN LOOP
 
 # Needed for Pygame to run
+running = True
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
