@@ -193,9 +193,9 @@ def Draw_Input_boxes():
     )
 
     #Needed for the input boxes, and lets the name apply to it
-    row_label = FONT.render("Row", True,(0,0,0))
-    column_label = FONT.render("Column", True,(0,0,0))
-    value_label = FONT.render("Tile", True,(0,0,0))
+    row_label = FONT.render("Row", True,(255, 255, 255))
+    column_label = FONT.render("Column", True,(255, 255, 255))
+    value_label = FONT.render("Tile", True,(255, 255, 255))
 
 
     screen.blit(row_label, (10, control_y + 47))
