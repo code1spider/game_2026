@@ -16,9 +16,13 @@ TILE_SIZE = 40
 MAP_WIDTH = 10
 MAP_HEIGHT = 10
 
+SCREEN_WIDTH = MAP_WIDTH * TILE_SIZE
+SCREEN_HEIGHT = MAP_HEIGHT * TILE_SIZE + 90
+
 screen = pygame.display.set_mode(
-    (MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE)
+    (SCREEN_WIDTH, SCREEN_HEIGHT)
 )
+
 pygame.display.set_caption("Map 1")
 FONT = pygame.font.Font(None, 28)
 #MAP
@@ -118,18 +122,22 @@ def update_player_movement():
 Input_boxes = {
     'row': pygame.Rect(
         10, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
-    
-    'Column': pygame.Rect(90, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
 
-    "Value":  pygame.Rect(210, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
+    'col': pygame.Rect(
+        110, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
 
+    'value': pygame.Rect(
+        210, MAP_HEIGHT * TILE_SIZE + 10, 80, 35),
 }
+
+
 
 input_text = {
     'row': '',
-    'Column': '',
-    'Value': ''
+    'col': '',
+    'value': ''
 }
+
 
 active_box = None #makes the selected box none at default, so boxes arent randomly selected
 
@@ -141,7 +149,7 @@ status_message = '' #AKA nothing by, just making empty space for WHEN it is call
 
 #TILE CHANGING LOGIC
 
-def tile_edit():
+def change_tile():
     global status_message
 
     try:
@@ -152,55 +160,64 @@ def tile_edit():
 
         #check if cordinates value is valid
         if not (0 <= row < MAP_HEIGHT):
-            Status_message = 'Column must be withing 0 and 9.'
+            status_message = 'Column must be withing 0 and 9.'
             return
 
-        if not (0 <= row < MAP_WIDTH):
-            Status_message = 'Column must be withing 0 and 9.'
+        if not (0 <= col < MAP_WIDTH):
+            status_message = 'Column must be withing 0 and 9.'
             return
 #check if tile value even exists
         if new_val not in tile_images:
-            Status_message = 'Tile number not valid.'
+            status_message = 'Tile number not valid.'
             return
 
 #actually changing the tile
-        current_map[row][column] = new_val
+        current_map[row][col] = new_val
 
-        Status_message = 'success'
+        # Clear input boxes
+        input_text["row"] = ''
+        input_text["col"] = ''
+        input_text["value"] = ''
 
     except ValueError:
 
-        Status_message ='Error'
+        status_message ='Error'
 
 #Draw functions
 
-def draw_input_boxes():
+def Draw_Input_boxes():
 
     control_y = MAP_HEIGHT * TILE_SIZE
 
     pygame.draw.rect(screen, (30, 30, 30),(0, control_y, SCREEN_WIDTH, 90)
     )
 
+    #Needed for the input boxes, and lets the name apply to it
+    row_label = FONT.render("Row", True,(0,0,0))
+    column_label = FONT.render("Column", True,(0,0,0))
+    value_label = FONT.render("Tile", True,(0,0,0))
+
+
     screen.blit(row_label, (10, control_y + 47))
     screen.blit(column_label, (110, control_y + 47))
     screen.blit(value_label, (210, control_y + 47))
 
 # Draw actual input boxes
-for name, rect in Input_boxes.items():
+    for name, rect in Input_boxes.items():
 
-    if active_box == name:
-        color = (100, 80, 60)
-    else:
-        color = (200, 160, 120)
+        if active_box == name:
+            color = (100, 80, 60)
+        else:
+            color = (200, 160, 120)
 
-    pygame.draw.rect(screen, color, rect, 2)
+        pygame.draw.rect(screen, color, rect, 2)
 
-    text_surface = FONT.render(input_text[name], True, (255, 255, 255))
+        text_surface = FONT.render(input_text[name], True, (255, 255, 255))
 
-    screen.blit(text_surface,(
+        screen.blit(text_surface,(
         rect.x + 5,
         rect.y + 10
-    ))
+        ))
 
 # DRAW CHANGE BUTTON
     pygame.draw.rect(screen, (70, 200, 70), BUTTON_RECT)
@@ -245,7 +262,7 @@ while running:
 
             #check swapping/change button
             if BUTTON_RECT.collidepoint(event.pos):
-                change.tile()
+                change_tile()
 
 #KEYBOARD INPUTS
 
@@ -294,7 +311,7 @@ while running:
 
     #draw input controls
 
-    draw_Input_boxes()
+    Draw_Input_boxes()
 
     # Update the display as per FPS
     pygame.display.flip()
