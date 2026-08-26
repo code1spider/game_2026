@@ -206,9 +206,9 @@ def Draw_Input_boxes():
     for name, rect in Input_boxes.items():
 
         if active_box == name:
-            color = (100, 80, 60)
+            color = (100, 180, 60)
         else:
-            color = (200, 160, 120)
+            color = (255, 255, 255)
 
         pygame.draw.rect(screen, color, rect, 2)
 
@@ -222,7 +222,7 @@ def Draw_Input_boxes():
 # DRAW CHANGE BUTTON
     pygame.draw.rect(screen, (70, 200, 70), BUTTON_RECT)
 
-    button_text = FONT.render('change', True, (0,0,0))
+    button_text = FONT.render('change', True, (255, 255, 255))
 
     screen.blit(button_text, 
     (BUTTON_RECT.x + 5, 
