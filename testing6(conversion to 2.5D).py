@@ -5,20 +5,24 @@ import time
 pygame.init()
 clock = pygame.time.Clock()
 
+##my comments will use single ## like this one to distuingush MY comments
+
 #HIDDEN SETTINGS
 
 # Variables to track movement cooldown (in milliseconds)
 MOVE_COOLDOWN = 200  # 0.2 seconds = 200ms
 last_move_time = 0
 
+##Since diagonal controls are NOT symetrical on all sides having a constant TILE_SIZE will not work, I would instead need different width and height values, ergo TILE_SIZE should be removed.
 # Constants
-TILE_SIZE = 40
+
 
 # >>> ADD:
 # For the 2.5D version, you will eventually want separate
 # width/height values for the "floor" tiles.
 #
 # For example:
+
 #
 # TILE_WIDTH = 80
 # TILE_HEIGHT = 40
@@ -28,6 +32,15 @@ TILE_SIZE = 40
 
 MAP_WIDTH = 10
 MAP_HEIGHT = 10
+
+##Will also need to change sizes of tiles and the screen, I will keep the idea to make TILE_SIZE into two seperate width and height
+
+TILE_WIDTH = 20
+TILE_HEIGHT = 40
+
+#I should likely also replace by screen size code as TILE_SIZE will be removed
+screen_width = 1000
+screen_height = 1100
 
 # >>> REMOVE/REPLACE LATER:
 # These two values currently assume that your map is a normal
@@ -39,8 +52,6 @@ MAP_HEIGHT = 10
 # For 2.5D, you'll eventually want a fixed/larger screen size
 # because the map will be drawn diagonally.
 
-SCREEN_WIDTH = MAP_WIDTH * TILE_SIZE
-SCREEN_HEIGHT = MAP_HEIGHT * TILE_SIZE + 90
 
 screen = pygame.display.set_mode(
     (SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -49,7 +60,9 @@ screen = pygame.display.set_mode(
 pygame.display.set_caption("Map 1")
 FONT = pygame.font.Font(None, 28)
 #MAP
+#---------------------------
 
+#---------------------------
 # Map 1
 map_one = [
     [0, 0, 4, 3, 3, 3, 3, 4, 2, 0],
@@ -72,8 +85,10 @@ map_one = [
 #
 # So you do NOT need to turn this into something complicated.
 
-
+#--------------------
 # LOAD IMAGES
+#--------------------
+
 
 def load_image(name):
     path = os.path.join("assets", name)
@@ -118,8 +133,9 @@ tile_images = {
 #
 # What changes is how/where they are DRAWN.
 
-
+#---------------------------------------
 #MAP PLAYER INTERACTIONS
+#---------------------------------------
 
 def find_tile(tile_value, tile_map):
     for y, row in enumerate(tile_map):
@@ -177,10 +193,35 @@ player_pos = list(find_tile(5, current_map))
 # but grid_to_screen() figures out where [4, 5] should
 # actually appear on the screen.
 
+#-----------------------------------
+# 2.5D conversion
+#-----------------------------------
 
+##This is new and will be needed to affect the cordinate system as they will now be tilted
+## Need to make a new variable to use mathematic functions, however they will be guesswork as I do not know how they should look, so this will be revisted
+set_x = 80
+set_y = 100
+
+
+def Dimension(x, y):
+
+    display_x = set_x * TILE_WIDTH
+
+    display_y = set_y * TILE_HEIGHT
+
+    return display_x, display_y
+
+#---------------------------------
+#---------------------------------
+ ##According to the AI suggestion code, I should remove this:
+ # Draw player
+#def draw_player():
+   # screen.blit(player_image, (player_pos[0] * TILE_SIZE, player_pos[1] * TILE_SIZE))
 # Draw player
-def draw_player():
-    screen.blit(player_image, (player_pos[0] * TILE_SIZE, player_pos[1] * TILE_SIZE))
+#def draw_player():
+#    screen.blit(player_image, (player_pos[0] * TILE_SIZE, player_pos[1] * TILE_SIZE))
+
+#because it only works on a square grid, so I will replace it with drawing the new diagonal player/floor
 
 # >>> REMOVE/REPLACE THIS DRAWING POSITION:
 #
@@ -201,6 +242,17 @@ def draw_player():
 #
 # KEEP the function itself.
 # You're mainly changing HOW the player gets positioned.
+
+##My new variable has to draw the images in regards to x and y, this means they could be unique, now, instead of debris tiles being flat and making no sense, for instance, they can look like genuine rubble
+
+def draw_new_floor_tile(x,y, image):
+
+    set_x, set_y = dimension(x, y)
+    points = [
+        (set_x, set_y),
+    ]
+
+    
 
 
 def update_player_movement():
