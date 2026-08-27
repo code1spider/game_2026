@@ -39,8 +39,8 @@ TILE_WIDTH = 20
 TILE_HEIGHT = 40
 
 #I should likely also replace by screen size code as TILE_SIZE will be removed
-screen_width = 1000
-screen_height = 1100
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 1100
 
 # >>> REMOVE/REPLACE LATER:
 # These two values currently assume that your map is a normal
@@ -89,13 +89,20 @@ map_one = [
 # LOAD IMAGES
 #--------------------
 
+##Loading images will need to be done vastly differently as they should NOT be constant, but rather able to be changed to allow 2.5D control
+##Can use try code, aswell as checking for file names and could likely use alpha for the player to not overwrite the tiles
+##Could likely use a tuple to use 'isinstance' which I have just learned on google summary AI
+def load_image(name, dimensions=none):
+    try:
+        path = os.path.join("assets", filename)
+        img_surface = pygame.image.load(path).convert.alpha()
+        if isinstance(dimensions, (tuple, list)) and len(dimensions) == 2: #2 because it is needed for the precise length I need I think (More testing later)
+            img_surface = pygame.transform.smoothscale(img_surface, dimensions)
 
-def load_image(name):
-    path = os.path.join("assets", name)
-    return pygame.transform.scale(
-        pygame.image.load(path).convert_alpha(),
-        (TILE_SIZE, TILE_SIZE)
-    )
+            return img_surface
+    #except statement needed for try function
+    except pygame.error as e:
+        raise FileNotFoundError(f"Unable to load image '{filename}': {e}")
 
 # >>> CHANGE/REPLACE LATER:
 # At the moment, this function forces EVERY image to be
