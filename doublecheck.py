@@ -2,33 +2,33 @@ import pygame
 import os
 import time
 
+
+# ============================================================
+# PYGAME SETUP
+# ============================================================
+
 pygame.init()
 clock = pygame.time.Clock()
 
+
 ##my comments will use single ## like this one to distuingush MY comments
 
-#HIDDEN SETTINGS
+
+# ============================================================
+# HIDDEN SETTINGS
+# ============================================================
 
 # Variables to track movement cooldown (in milliseconds)
 MOVE_COOLDOWN = 200  # 0.2 seconds = 200ms
 last_move_time = 0
 
+
 ##Since diagonal controls are NOT symetrical on all sides having a constant TILE_SIZE will not work, I would instead need different width and height values, ergo TILE_SIZE should be removed.
-# Constants
 
 
-# >>> ADD:
-# For the 2.5D version, you will eventually want separate
-# width/height values for the "floor" tiles.
-#
-# For example:
-
-#
-# TILE_WIDTH = 80
-# TILE_HEIGHT = 40
-#
-# You can keep TILE_SIZE for now while experimenting,
-# or eventually REMOVE TILE_SIZE if nothing uses it anymore.
+# ============================================================
+# MAP / TILE SETTINGS
+# ============================================================
 
 MAP_WIDTH = 10
 MAP_HEIGHT = 10
@@ -36,27 +36,38 @@ MAP_HEIGHT = 10
 TILE_WIDTH = 80
 TILE_HEIGHT = 40
 
+
 ##Will also need to change sizes of tiles and the screen, I will keep the idea to make TILE_SIZE into two seperate width and height
-#-----------------------
-## 2.5D parts
-#-----------------------
+
+
+# ============================================================
+# 2.5D SETTINGS
+# ============================================================
 
 ##I will update tile width and height and screen width and height to ensure my game is more flexible
+
 GAME_WIDTH = 800
 GAME_HEIGHT = 800
 
 OBJECT_HEIGHT = 100
 PLAYER_HEIGHT = 100
 
+
 ## Tile changer should also be included
 
 UI_HEIGHT = 100
 
+
 #I should likely also replace by screen size code as TILE_SIZE will be removed
 ## changing width and height to use game width and height
-SCREEN_WIDTH =  GAME_WIDTH
+
+SCREEN_WIDTH = GAME_WIDTH
 SCREEN_HEIGHT = GAME_WIDTH + UI_HEIGHT
 
+
+# ============================================================
+# SCREEN SETUP
+# ============================================================
 
 screen = pygame.display.set_mode(
     (SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -66,6 +77,11 @@ pygame.display.set_caption("Map 1")
 
 FONT = pygame.font.Font(None, 28)
 
+
+# ============================================================
+# MAP
+# ============================================================
+
 #MAP
 #---------------------------
 ## Isometric needs origins
@@ -73,8 +89,10 @@ FONT = pygame.font.Font(None, 28)
 MAP_ORIGIN_X = SCREEN_WIDTH // 2
 MAP_ORIGIN_Y = 180
 
+
 #---------------------------
 # Map 1
+
 map_one = [
     [0, 0, 4, 3, 3, 3, 3, 4, 2, 0],
     [0, 0, 0, 4, 3, 3, 4, 0, 0, 0],
@@ -97,24 +115,36 @@ map_one = [
 #
 # So you do NOT need to turn this into something complicated.
 
-#--------------------
+
+# ============================================================
 # LOAD IMAGES
-#--------------------
+# ============================================================
 
 ##Loading images will need to be done vastly differently as they should NOT be constant, but rather able to be changed to allow 2.5D control
 ##Can use try code, aswell as checking for file names and could likely use alpha for the player to not overwrite the tiles
 ##Could likely use a tuple to use 'isinstance' which I have just learned on google summary AI
+
 def load_image(name, dimensions=None):
+
     try:
         path = os.path.join("assets", name)
+
         img_surface = pygame.image.load(path).convert_alpha()
+
         if isinstance(dimensions, (tuple, list)) and len(dimensions) == 2: #2 because it is needed for the precise length I need I think (More testing later)
-            img_surface = pygame.transform.smoothscale(img_surface, dimensions)
+            img_surface = pygame.transform.smoothscale(
+                img_surface,
+                dimensions
+            )
 
         return img_surface
+
     #except statement needed for try function
     except pygame.error as e:
-        raise FileNotFoundError(f"Unable to load image '{name}': {e}")
+        raise FileNotFoundError(
+            f"Unable to load image '{name}': {e}"
+        )
+
 
 # >>> CHANGE/REPLACE LATER:
 # At the moment, this function forces EVERY image to be
@@ -131,10 +161,15 @@ def load_image(name, dimensions=None):
 # IMPORTANT:
 # Don't change this yet if you want to work on one thing
 # at a time. This is simply one of the areas you'll need
-# to revisit.
+# to revisit. 
 
+
+# ============================================================
+# TILE IMAGES
+# ============================================================
 
 # Only the images actually used by map 1
+
 tile_images = {
     0: load_image("floor.png"),
     1: load_image("path.png"),
@@ -144,34 +179,38 @@ tile_images = {
     5: load_image("doorshadow.png"),
 }
 
-#------
-## floor images
-#------
+
+# ============================================================
+# FLOOR IMAGES
+# ============================================================
 
 ##floor images are resized to the size of one isometric tile
 
 floor_images = {}
 
 for tile_id in (0, 1, 4, 5):
+
     floor_images[tile_id] = pygame.transform.smoothscale(
         tile_images[tile_id],
         (TILE_WIDTH, TILE_HEIGHT)
     )
 
-#----
-##player
-#----
+
+# ============================================================
+# PLAYER IMAGE
+# ============================================================
 
 player_image = load_image(
     'Player.png'
 )
 
-#---------------------------------------
-#MAP PLAYER INTERACTIONS
-#---------------------------------------
+
+# ============================================================
+# MAP / PLAYER INTERACTIONS
+# ============================================================
 
 def find_tile(tile_value, tile_map):
-    
+
     for y, row in enumerate(tile_map):
 
         for x, tile in enumerate(row):
@@ -179,7 +218,7 @@ def find_tile(tile_value, tile_map):
             if tile == tile_value:
 
                 return x, y
-            
+
     return None
 
 
@@ -187,9 +226,11 @@ current_map = map_one
 player_pos = list(find_tile(5, current_map))
 
 
-#--------------------------------------
+# ============================================================
+# ISOMETRIC CONVERSION
+# ============================================================
+
 ##grid into isometric conversion
-#--------------------------------------
 
 def grid_to_screen(x, y):
 
@@ -198,9 +239,12 @@ def grid_to_screen(x, y):
 
     return display_x, display_y
 
-#---------------------------------------
+
+# ============================================================
+# DIAMOND POINTS
+# ============================================================
+
 ##diamond point
-#--------------------------------------
 
 def get_diamond_points(center_x, center_y):
 
@@ -214,17 +258,32 @@ def get_diamond_points(center_x, center_y):
         (center_x - half_width, center_y)    # Left
     )
 
-#---------------------------------------
+
+# ============================================================
+# DRAW FLOOR TILE
+# ============================================================
+
 ##draw floor tile
-#--------------------------------------
 
 def draw_floor_tile(x, y, image):
 
     center_x, center_y = grid_to_screen(x, y)
 
-    tile_surface = pygame.Surface((TILE_WIDTH, TILE_HEIGHT), pygame.SRCALPHA)
-    tile_surface.blit(image, (0, 0))
-    mask = pygame.Surface((TILE_WIDTH, TILE_HEIGHT), pygame.SRCALPHA)
+    tile_surface = pygame.Surface(
+        (TILE_WIDTH, TILE_HEIGHT),
+        pygame.SRCALPHA
+    )
+
+    tile_surface.blit(
+        image,
+        (0, 0)
+    )
+
+    mask = pygame.Surface(
+        (TILE_WIDTH, TILE_HEIGHT),
+        pygame.SRCALPHA
+    )
+
     mask_points = (
         (TILE_WIDTH // 2, 0),  # Top
         (TILE_WIDTH, TILE_HEIGHT // 2),  # Right
@@ -232,15 +291,32 @@ def draw_floor_tile(x, y, image):
         (0, TILE_HEIGHT // 2)  # Left
     )
 
-    pygame.draw.polygon(mask, (255, 255, 255), mask_points)
+    pygame.draw.polygon(
+        mask,
+        (255, 255, 255),
+        mask_points
+    )
 
-    tile_surface.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+    tile_surface.blit(
+        mask,
+        (0, 0),
+        special_flags=pygame.BLEND_RGBA_MULT
+    )
 
-    screen.blit(tile_surface, (center_x - TILE_WIDTH // 2, center_y - TILE_HEIGHT // 2))
+    screen.blit(
+        tile_surface,
+        (
+            center_x - TILE_WIDTH // 2,
+            center_y - TILE_HEIGHT // 2
+        )
+    )
 
-#---------------------------------------
+
+# ============================================================
+# FAILSAFE FLOOR
+# ============================================================
+
 ##in case of glitching- extra floor
-#-------------------------------------
 
 def draw_failsafe_floor(x, y):
 
@@ -259,16 +335,25 @@ def draw_failsafe_floor(x, y):
         1
     )
 
-#---------------------------------------
-##Add extra details, upright objects
-#---------------------------------------
 
-def draw_object(x, y, image, height = OBJECT_HEIGHT):
+# ============================================================
+# UPRIGHT OBJECTS
+# ============================================================
+
+##Add extra details, upright objects
+
+def draw_object(
+    x,
+    y,
+    image,
+    height=OBJECT_HEIGHT
+):
 
     center_x, center_y = grid_to_screen(x, y)
 
     image_width = image.get_width()
     image_height = image.get_height()
+
 
     ##keep original proportions of the image, but also allow for height to be added to the image, so it can be seen as upright
 
@@ -278,21 +363,23 @@ def draw_object(x, y, image, height = OBJECT_HEIGHT):
     )
 
     new_width = max(
-        1, 
+        1,
         int(image_width * scale)
     )
+
     new_height = max(
         1,
         int(image_height * scale)
     )
 
     scaled_image = pygame.transform.smoothscale(
-        image, 
+        image,
         (
             new_width,
             new_height
         )
     )
+
 
     #shadow effect for the object, so it looks like it is standing upright
 
@@ -322,9 +409,12 @@ def draw_object(x, y, image, height = OBJECT_HEIGHT):
         )
     )
 
-#---------------------------------------
+
+# ============================================================
+# PLAYER DRAWING
+# ============================================================
+
 ##draw player
-#---------------------------------------
 
 def draw_player():
 
@@ -334,6 +424,7 @@ def draw_player():
 
     image_width = player_image.get_width()
     image_height = player_image.get_height()
+
 
     #keep proportions of the player image, but also allow for height to be added to the image, so it can be seen as upright
 
@@ -359,6 +450,8 @@ def draw_player():
             new_height
         )
     )
+
+
     ##player shadow effect, so it looks like it is standing upright
 
     shadow_rect = pygame.Rect(
@@ -387,12 +480,13 @@ def draw_player():
         )
     )
 
-    #---------------------------------------
-    ##draw map
-    #--------------------------------------
+
+# ============================================================
+# DRAW MAP
+# ============================================================
 
 def draw_map():
-    
+
     for y in range(MAP_HEIGHT):
 
         for x in range(MAP_WIDTH):
@@ -401,11 +495,19 @@ def draw_map():
 
             if tile in floor_images:
 
-                draw_floor_tile(x, y, floor_images[tile])
+                draw_floor_tile(
+                    x,
+                    y,
+                    floor_images[tile]
+                )
 
             else:
 
-                draw_failsafe_floor(x, y)
+                draw_failsafe_floor(
+                    x,
+                    y
+                )
+
 
     objects = []
 
@@ -437,73 +539,131 @@ def draw_map():
                     )
                 )
 
+
     objects.sort(
         key=lambda item: item[0]
     )
 
+
     for depth, x, y, image in objects:
 
-        draw_object(x, y, image)
-# Walkability
+        draw_object(
+            x,
+            y,
+            image
+        )
+
+
+# ============================================================
+# WALKABILITY
+# ============================================================
 
 def is_walkable(x, y):
+
     if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
+
         return current_map[y][x] not in (2, 3)
+
     return False
 
-#--------------------------------
+
+# ============================================================
+# PLAYER MOVEMENT
+# ============================================================
+
 ##player movement
-#--------------------------------
 
 def update_player_movement():
+
     global player_pos, last_move_time
+
     current_time = pygame.time.get_ticks()
+
     new_x, new_y = player_pos
+
     keys = pygame.key.get_pressed()
 
+
     # 2. Check if enough time has passed since the last move
+
     if current_time - last_move_time >= MOVE_COOLDOWN:
+
         moved = False
 
+
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+
             if is_walkable(new_x - 1, new_y):
+
                 new_x -= 1
                 moved = True
+
+
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+
             if is_walkable(new_x + 1, new_y):
+
                 new_x += 1
                 moved = True
+
+
         if keys[pygame.K_w] or keys[pygame.K_UP]:
+
             if is_walkable(new_x, new_y - 1):
+
                 new_y -= 1
                 moved = True
+
+
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+
             if is_walkable(new_x, new_y + 1):
+
                 new_y += 1
                 moved = True
 
+
         # 3. If the player moved, update the position and reset the cooldown timer
+
         if moved:
+
             player_pos = [new_x, new_y]
             last_move_time = current_time
 
-#--------------------------------
+
+# ============================================================
+# TILE EDITOR / INPUTS
+# ============================================================
+
 ## inputs
-#-------------------------------
 
 CONTROL_Y = GAME_HEIGHT + 10
 
 
 Input_boxes = {
+
     'row': pygame.Rect(
-        10, CONTROL_Y, 80, 35),
+        10,
+        CONTROL_Y,
+        80,
+        35
+    ),
 
     'col': pygame.Rect(
-        110, CONTROL_Y, 80, 35),
+        110,
+        CONTROL_Y,
+        80,
+        35
+    ),
 
     'value': pygame.Rect(
-        210, CONTROL_Y, 80, 35),
+        210,
+        CONTROL_Y,
+        80,
+        35
+    ),
 }
+
 
 input_text = {
     'row': '',
@@ -511,21 +671,32 @@ input_text = {
     'value': ''
 }
 
+
 active_box = None #makes the selected box none at default, so boxes arent randomly selected
 
-BUTTON_RECT = pygame.Rect(310, CONTROL_Y, 100, 35)
+BUTTON_RECT = pygame.Rect(
+    310,
+    CONTROL_Y,
+    100,
+    35
+)
 
 
+# ============================================================
+# STATUS MESSAGE
+# ============================================================
 
 #MESSAGE
 
 status_message = '' #AKA nothing by, just making empty space for WHEN it is called
 
 
-
-#TILE CHANGING LOGIC
+# ============================================================
+# TILE CHANGING LOGIC
+# ============================================================
 
 def change_tile():
+
     global status_message
 
     try:
@@ -534,33 +705,54 @@ def change_tile():
         col = int(input_text["col"])
         new_val = int(input_text["value"])
 
+
         #check if cordinates value is valid
+
         if not (0 <= row < MAP_HEIGHT):
+
             status_message = 'Row must be within 0 and 9.'
+
             return
+
 
         if not (0 <= col < MAP_WIDTH):
+
             status_message = 'Column must be within 0 and 9.'
-            return
-#check if tile value even exists
-        if new_val not in tile_images:
-            status_message = 'Tile number not valid.'
+
             return
 
-#actually changing the tile
+
+        #check if tile value even exists
+
+        if new_val not in tile_images:
+
+            status_message = 'Tile number not valid.'
+
+            return
+
+
+        #actually changing the tile
+
         current_map[row][col] = new_val
 
+
         # Clear input boxes
+
         input_text["row"] = ''
         input_text["col"] = ''
         input_text["value"] = ''
 
         status_message = 'Tile changed'
 
+
     except ValueError:
 
-        status_message ='Error'
+        status_message = 'Error'
 
+
+# ============================================================
+# DRAW INPUT BOXES / UI
+# ============================================================
 
 #Draw functions
 
@@ -568,51 +760,134 @@ def Draw_Input_boxes():
 
     control_y = CONTROL_Y #this makes sure i dont make a caps lock error, as I have done before
 
-    pygame.draw.rect(screen, (30, 30, 30),(0, control_y, SCREEN_WIDTH, UI_HEIGHT)
+
+    pygame.draw.rect(
+        screen,
+        (30, 30, 30),
+        (0, control_y, SCREEN_WIDTH, UI_HEIGHT)
     )
 
+
     #Needed for the input boxes, and lets the name apply to it
-    row_label = FONT.render("Row", True,(255, 255, 255))
-    column_label = FONT.render("Column", True,(255, 255, 255))
-    value_label = FONT.render("Tile", True,(255, 255, 255))
+
+    row_label = FONT.render(
+        "Row",
+        True,
+        (255, 255, 255)
+    )
+
+    column_label = FONT.render(
+        "Column",
+        True,
+        (255, 255, 255)
+    )
+
+    value_label = FONT.render(
+        "Tile",
+        True,
+        (255, 255, 255)
+    )
 
 
-    screen.blit(row_label, (10, control_y + 47))
-    screen.blit(column_label, (110, control_y + 47))
-    screen.blit(value_label, (210, control_y + 47))
+    screen.blit(
+        row_label,
+        (10, control_y + 47)
+    )
 
-# Draw actual input boxes
+    screen.blit(
+        column_label,
+        (110, control_y + 47)
+    )
+
+    screen.blit(
+        value_label,
+        (210, control_y + 47)
+    )
+
+
+    # Draw actual input boxes
+
     for name, rect in Input_boxes.items():
 
         if active_box == name:
+
             color = (100, 180, 60)
+
         else:
+
             color = (255, 255, 255)
 
-        pygame.draw.rect(screen, color, rect, 2)
 
-        text_surface = FONT.render(input_text[name], True, (255, 255, 255))
+        pygame.draw.rect(
+            screen,
+            color,
+            rect,
+            2
+        )
 
-        screen.blit(text_surface,(
-        rect.x + 5,
-        rect.y + 10
-        ))
 
-# DRAW CHANGE BUTTON
-    pygame.draw.rect(screen, (70, 200, 70), BUTTON_RECT)
+        text_surface = FONT.render(
+            input_text[name],
+            True,
+            (255, 255, 255)
+        )
 
-    button_text = FONT.render('change', True, (255, 255, 255))
 
-    screen.blit(button_text, 
-    (BUTTON_RECT.x + 5, 
-    BUTTON_RECT.y + 3))
+        screen.blit(
+            text_surface,
+            (
+                rect.x + 5,
+                rect.y + 10
+            )
+        )
+
+
+    # DRAW CHANGE BUTTON
+
+    pygame.draw.rect(
+        screen,
+        (70, 200, 70),
+        BUTTON_RECT
+    )
+
+
+    button_text = FONT.render(
+        'change',
+        True,
+        (255, 255, 255)
+    )
+
+
+    screen.blit(
+        button_text,
+        (
+            BUTTON_RECT.x + 5,
+            BUTTON_RECT.y + 3
+        )
+    )
+
 
     #Draw in the status messages
-    status_text = FONT.render(status_message, True, (255, 220, 200))
 
-    screen.blit(status_text, (400, control_y + 20))
+    status_text = FONT.render(
+        status_message,
+        True,
+        (255, 220, 200)
+    )
 
-#main game loop
+
+    screen.blit(
+        status_text,
+        (
+            400,
+            control_y + 20
+        )
+    )
+
+
+# ============================================================
+# MAIN GAME LOOP
+# ============================================================
 
 running = True
 
@@ -621,36 +896,46 @@ while running:
 
     #python events
 
-
-
     for event in pygame.event.get():
+
         if event.type == pygame.QUIT:
+
             running = False
 
+
         #mouse click code
-    
+
         elif event.type == pygame.MOUSEBUTTONDOWN:
 
             active_box = None
 
+
             #check input boxes
+
             for name, rect in Input_boxes.items():
 
                 if rect.collidepoint(event.pos):
+
                     active_box = name
 
+
             #check swapping/change button
+
             if BUTTON_RECT.collidepoint(event.pos):
+
                 change_tile()
 
-#KEYBOARD INPUTS
+
+        #KEYBOARD INPUTS
 
         elif event.type == pygame.KEYDOWN:
 
             #only works if a box is selected
+
             if active_box is not None:
 
-            #backspace
+                #backspace
+
                 if event.key == pygame.K_BACKSPACE:
 
                     input_text[active_box] = (
@@ -659,24 +944,34 @@ while running:
 
 
                 #enter
+
                 if event.key == pygame.K_RETURN:
 
                     change_tile()
 
-                    #number keys
+
+                #number keys
+
                 elif event.unicode.isdigit():
 
                     input_text[active_box] += event.unicode
 
-#player movement
+
+    #player movement
 
     update_player_movement()
 
-# Draw map
+
+    # ========================================================
+    # DRAW EVERYTHING
+    # ========================================================
+
+    # Draw map
 
     screen.fill((0, 0, 0))
 
     draw_map()
+
 
     # >>> REMOVE/REPLACE THIS ENTIRE MAP-DRAWING SECTION:
     #
@@ -710,7 +1005,9 @@ while running:
 
 
     # Draw player
+
     draw_player()
+
 
     # >>> KEEP THIS FUNCTION CALL:
     #
@@ -723,6 +1020,7 @@ while running:
 
     Draw_Input_boxes()
 
+
     # >>> KEEP:
     # Your editor/control panel remains a normal 2D UI.
     #
@@ -731,8 +1029,11 @@ while running:
 
 
     # Update the display as per FPS
+
     pygame.display.flip()
-    clock.tick(60)  
+
+    clock.tick(60)
+
 
     # Movement logic for player
 
