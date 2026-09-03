@@ -24,8 +24,48 @@ last_move_time = 0
 
 room_number = 1
 
+# ============================================================
+# GAME STATE
+# ============================================================
 
+#this will control things that can happen to the player, and the state of the room (safe/unsafe)
 
+game_over = False
+jumpscare_active = False
+
+#used for cowardice (enemy_3)
+enemy_active = False
+
+#Used to stop player movement during an event
+player_locked = False
+
+# ============================================================
+# ENEMY SETTINGS
+# ============================================================
+
+# Enemy settings will eventually be moved here so that enemy behaviour can be changed without digging through the rest of the code.
+
+ENEMY_MOVE_COOLDOWN = 100
+enemny_last_move_time = 0
+
+enemy_pos = None
+enemy_direction = (0, 1)
+
+enemy_active = False
+
+# ============================================================
+# TILE IDs
+# ============================================================
+
+#keeping tile IDs named makes the map easier to understand, especially for coding
+
+TILE_FLOOR = 0
+TILE_PATH = 1
+TILE_DEBRIS = 2
+TILE_MACHINE = 3
+TILE_FLOOR_ALT = 4
+TILE_ENTRANCE = 5
+TILE_EXIT = 6
 
 # ============================================================
 # MAP / TILE SETTINGS
@@ -293,6 +333,16 @@ player_image = load_image(
     'Player.png'
 )
 
+# ============================================================
+# ENEMY IMAGES
+# ============================================================
+
+# Enemy images are kept separate from normal map objects, this allows enemies to move independently around the map.
+
+enemy_image = load_image(
+    'player.png' #an enemy image will be added, but for the meantime the player image will be a placeholder
+)
+
 
 # ============================================================
 # MAP / PLAYER INTERACTIONS
@@ -484,6 +534,22 @@ def draw_failsafe_floor(x, y):
         1
     )
 
+# ============================================================
+# OBJECT SETTINGS
+# ============================================================
+
+#this is where special properties can be added, like debris blocking movement and vision, or a machine may block movement but not vision, more tile types will be added in future so this will be updated appropriately
+
+OBJECT_PROPERTIES = {
+    2: {  # Debris
+        'blocks_movement': True,
+        'blocks_vision': True
+    },
+    3: {  # Machine
+        'blocks_movement': True,
+        'blocks_vision': False
+    }
+}
 
 # ============================================================
 # UPRIGHT OBJECTS
@@ -699,11 +765,18 @@ def draw_map():
 
 def is_walkable(x, y):
 
-    if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
+    if not (0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT):
+        return False
 
-        return current_map[y][x] not in (2, 3)
+    tile = current_map[y][x]
 
-    return False
+    #check whether this object blocks movement
+    if tile in OBJECT_PROPERTIES:
+
+        if OBJECT_PROPERTIES[tile]["blocks_movement"]:
+            return False
+
+    return True
 
 # ============================================================
 # CHECK ADJACENCY
@@ -795,6 +868,31 @@ def update_player_movement():
 
                 move_to_next_map()
 
+# ============================================================
+# ENEMY MOVEMENT
+# ============================================================
+
+##ememy movement is separate from player movement because enemies can have completely different movement speeds
+
+def update_enemy():
+
+    global enemy_position
+    global enemy_last_move_time
+
+    if not enemy_active:
+        return
+
+    if enemy_position is None:
+        return
+
+    current_time = pygame.time.get.ticks()
+
+    if current_time - enemy_last_move_time < ENEMY_MOVE_COOLDOWN:
+        return
+
+    enemy_last_move_time = current_time
+
+    #other stuff that should be added are pathfinding, chasing, line of sight, searching, or patrolling, depending on what gets added, this should thus be updated later
 
 # ============================================================
 # TILE EDITOR / INPUTS
@@ -1191,6 +1289,33 @@ while running:
 
     draw_player()
 
+    # ============================================================
+    # ENEMY DRAWING
+    # ============================================================
+
+    def draw_enemy():
+        if not enemy_active:
+            return
+
+        if enemy_position is None:
+            return
+
+        x, y = enemy_position
+
+        center_x, center_y = grid_to_screen(x, y)
+
+        image_width = enemy_image.get.width()
+        image_height = enemy_image.get.height()
+
+        shadow_rect.center = (
+            center_x, center_y + 2
+        )
+
+        pygame.draw.ellipse(
+            screen,
+            (20, 20, 20),
+            shadow_rect
+        )
 
     #draw input controls
     if is_adjacent_to_tile(3):
