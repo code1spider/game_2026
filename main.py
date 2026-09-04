@@ -2,6 +2,7 @@ import pygame
 import os
 import time
 import random
+import math #math is being added for later features
 
 
 # ============================================================
@@ -84,24 +85,51 @@ def load_map(map_number):
 
 
 
-# ============================================================
-# 2.5D SETTINGS
-# ============================================================
+## ============================================================
+## 2.5D SETTINGS
+## this section has been removed because it draws isometric, I will use faux 3D in its place
+## ============================================================
+#
+#
+#GAME_WIDTH = 800
+#GAME_HEIGHT = 750
+#
+#OBJECT_HEIGHT = 100
+#PLAYER_HEIGHT = 100
+#
+#
+#UI_HEIGHT = 100
+#
+#
+#SCREEN_WIDTH = GAME_WIDTH
+#SCREEN_HEIGHT = GAME_WIDTH + UI_HEIGHT
 
+
+# ============================================================
+# FAUX 3D
+# ============================================================
 
 GAME_WIDTH = 800
-GAME_HEIGHT = 750
-
-OBJECT_HEIGHT = 100
-PLAYER_HEIGHT = 100
-
+GAME_HEIGHT = 650
 
 UI_HEIGHT = 100
 
-
 SCREEN_WIDTH = GAME_WIDTH
-SCREEN_HEIGHT = GAME_WIDTH + UI_HEIGHT
+SCREEN_HEIGHT = GAME_HEIGHT + UI_HEIGHT #Im adding the UI height in case I keep the tile changing logic
 
+FOV = math/pi / 3
+
+#Max distance the player will see before fog of war
+MAX_DEPTH = 20
+
+#used for raycasting logic for later
+
+MOVE_SPEED = 0.045
+
+TURN_SPEED = 0.045
+
+#angle the player starts at
+PLAYER_START_ANGLE = -math.pi / 2
 
 # ============================================================
 # SCREEN SETUP
@@ -111,7 +139,8 @@ screen = pygame.display.set_mode(
     (SCREEN_WIDTH, SCREEN_HEIGHT)
 )
 
-pygame.display.set_caption("Map 1")
+#removed pygame.display.set_caption("Map 1") as it is used for the isometric function aswell
+pygame.display.set_caption("Faux 3D Map")
 
 FONT = pygame.font.Font(None, 28)
 
@@ -365,7 +394,15 @@ current_map_number = 0
 
 current_map = load_map(current_map_number)
 
-player_pos = list(find_tile(5, current_map))
+# removed player_pos = list(find_tile(5, current_map)) as it relys on the normal isometric grid
+
+spawn_x, spawn_y = find_tile(5, current_map) #this is the new code that does nearly the same thing- making the player spawn on a tile 5 (the grid checks the same way per, so you always spawn on the left or right one btw)
+
+player_x = spawn_x + 0.5
+player_y = spawn_y + 0.5
+#0.5 was chosen as it allows smaller movements than 1, making it feel like like a grid
+
+player_angle = PLAYER_ANGLE #this is useless in practicality, but if I mispell one, this will fix it
 
 # ============================================================
 # MAP ROOM PROGRESSION
@@ -379,7 +416,10 @@ specific_map_connections = {
 
 def move_to_next_map():
 
-    global current_map_number, current_map, player_pos
+    #changed global current_map_number, current_map, player_pos to exclude player_pos
+    global current_map_number, current_map
+    global player_x, player_y
+
     global room_number
 
     room_number += 1
@@ -419,121 +459,123 @@ def move_to_next_map():
 
     # Start at the entrance
 
-    player_pos = list(
-        find_tile(5, current_map)
-    )
+#    player_pos = list(
+#        find_tile(5, current_map)
+#    )
+#removed the above code as it tries to make the player spawn too precise for the amount of freedom of movement I prefer
 
         
 
-# ============================================================
-# ISOMETRIC CONVERSION
-# ============================================================
-
-##grid into isometric conversion
-
-def grid_to_screen(x, y):
-
-    display_x = MAP_ORIGIN_X + (x - y) * (TILE_WIDTH // 2)
-    display_y = MAP_ORIGIN_Y + (x + y) * (TILE_HEIGHT // 2)
-
-    return display_x, display_y
-
-
+## ============================================================
+## ISOMETRIC CONVERSION
+#removed because im changing from isometric conversion to faux 3D
+## ============================================================
+#
+###grid into isometric conversion
+#
+#def grid_to_screen(x, y):
+#
+#    display_x = MAP_ORIGIN_X + (x - y) * (TILE_WIDTH // 2)
+#    display_y = MAP_ORIGIN_Y + (x + y) * (TILE_HEIGHT // 2)
+#
+#    return display_x, display_y
+#
+#
 # ============================================================
 # DIAMOND POINTS
 # ============================================================
-
-##diamond point
-
-def get_diamond_points(center_x, center_y):
-
-    half_width = TILE_WIDTH // 2
-    half_height = TILE_HEIGHT // 2
-
-    return (
-        (center_x, center_y - half_height),  # Top
-        (center_x + half_width, center_y),   # Right
-        (center_x, center_y + half_height),  # Bottom
-        (center_x - half_width, center_y)    # Left
-    )
-
-
-# ============================================================
-# DRAW FLOOR TILE
-# ============================================================
-
-##draw floor tile
-
-def draw_floor_tile(x, y, image):
-
-    center_x, center_y = grid_to_screen(x, y)
-
-    tile_surface = pygame.Surface(
-        (TILE_WIDTH, TILE_HEIGHT),
-        pygame.SRCALPHA
-    )
-
-    tile_surface.blit(
-        image,
-        (0, 0)
-    )
-
-    mask = pygame.Surface(
-        (TILE_WIDTH, TILE_HEIGHT),
-        pygame.SRCALPHA
-    )
-
-    mask_points = (
-        (TILE_WIDTH // 2, 0),  # Top
-        (TILE_WIDTH, TILE_HEIGHT // 2),  # Right
-        (TILE_WIDTH // 2, TILE_HEIGHT),  # Bottom
-        (0, TILE_HEIGHT // 2)  # Left
-    )
-
-    pygame.draw.polygon(
-        mask,
-        (255, 255, 255),
-        mask_points
-    )
-
-    tile_surface.blit(
-        mask,
-        (0, 0),
-        special_flags=pygame.BLEND_RGBA_MULT
-    )
-
-    screen.blit(
-        tile_surface,
-        (
-            center_x - TILE_WIDTH // 2,
-            center_y - TILE_HEIGHT // 2
-        )
-    )
-
-
-# ============================================================
-# FAILSAFE FLOOR
-# ============================================================
-
-##in case of glitching- extra floor
-
-def draw_failsafe_floor(x, y):
-
-    center_x, center_y = grid_to_screen(x, y)
-
-    pygame.draw.polygon(
-        screen,
-        (100, 100, 100),
-        get_diamond_points(center_x, center_y)
-    )
-
-    pygame.draw.polygon(
-        screen,
-        (0, 0, 0),
-        get_diamond_points(center_x, center_y),
-        1
-    )
-
+#
+###diamond point
+#
+#def get_diamond_points(center_x, center_y):
+#
+#    half_width = TILE_WIDTH // 2
+#    half_height = TILE_HEIGHT // 2
+#
+#    return (
+#        (center_x, center_y - half_height),  # Top
+#        (center_x + half_width, center_y),   # Right
+#        (center_x, center_y + half_height),  # Bottom
+#        (center_x - half_width, center_y)    # Left
+#    )
+#
+#
+## ============================================================
+## DRAW FLOOR TILE
+## ============================================================
+#
+###draw floor tile
+#
+#def draw_floor_tile(x, y, image):
+#
+#    center_x, center_y = grid_to_screen(x, y)
+#
+#    tile_surface = pygame.Surface(
+#        (TILE_WIDTH, TILE_HEIGHT),
+#        pygame.SRCALPHA
+#    )
+#
+#    tile_surface.blit(
+#        image,
+#        (0, 0)
+#    )
+#
+#    mask = pygame.Surface(
+#        (TILE_WIDTH, TILE_HEIGHT),
+#        pygame.SRCALPHA
+#    )
+#
+#    mask_points = (
+#        (TILE_WIDTH // 2, 0),  # Top
+#        (TILE_WIDTH, TILE_HEIGHT // 2),  # Right
+#        (TILE_WIDTH // 2, TILE_HEIGHT),  # Bottom
+#        (0, TILE_HEIGHT // 2)  # Left
+#    )
+#
+#    pygame.draw.polygon(
+#        mask,
+#        (255, 255, 255),
+#        mask_points
+#    )
+#
+#    tile_surface.blit(
+#        mask,
+#        (0, 0),
+#        special_flags=pygame.BLEND_RGBA_MULT
+#    )
+#
+#    screen.blit(
+#        tile_surface,
+#        (
+#            center_x - TILE_WIDTH // 2,
+#            center_y - TILE_HEIGHT // 2
+#        )
+#    )
+#
+#
+## ============================================================
+## FAILSAFE FLOOR
+## ============================================================
+#
+###in case of glitching- extra floor
+#
+#def draw_failsafe_floor(x, y):
+#
+#    center_x, center_y = grid_to_screen(x, y)
+#
+#    pygame.draw.polygon(
+#        screen,
+#        (100, 100, 100),
+#        get_diamond_points(center_x, center_y)
+#    )
+#
+#    pygame.draw.polygon(
+#        screen,
+#        (0, 0, 0),
+#        get_diamond_points(center_x, center_y),
+#        1
+#    )
+#
 # ============================================================
 # OBJECT SETTINGS
 # ============================================================
@@ -551,79 +593,222 @@ OBJECT_PROPERTIES = {
     }
 }
 
+## ============================================================
+## UPRIGHT OBJECTS
+#deleting upright objects as 
+## ============================================================
+#
+###Add extra details, upright objects
+#
+#def draw_object(
+#    x,
+#    y,
+#    image,
+#    height=OBJECT_HEIGHT
+#):
+#
+#    center_x, center_y = grid_to_screen(x, y)
+#
+#    image_width = image.get_width()
+#    image_height = image.get_height()
+#
+#
+#    ##keep original proportions of the image, but also allow for height to be added to the image, so it can be seen as upright
+#
+#    scale = min(
+#        TILE_WIDTH / image_width,
+#        height / image_height
+#    )
+#
+#    new_width = max(
+#        1,
+#        int(image_width * scale)
+#    )
+#
+#    new_height = max(
+#        1,
+#        int(image_height * scale)
+#    )
+#
+#    scaled_image = pygame.transform.smoothscale(
+#        image,
+#        (
+#            new_width,
+#            new_height
+#        )
+#    )
+#
+#
+#    #shadow effect for the object, so it looks like it is standing upright
+#
+#    shadow_rect = pygame.Rect(
+#        0,
+#        0,
+#        TILE_WIDTH // 2,
+#        TILE_HEIGHT // 4
+#    )
+#
+#    shadow_rect.center = (
+#        center_x,
+#        center_y + 2
+#    )
+#
+#    pygame.draw.ellipse(
+#        screen,
+#        (20, 20, 20),
+#        shadow_rect
+#    )
+#
+#    screen.blit(
+#        scaled_image,
+#        (
+#            center_x - new_width // 2,
+#            center_y - new_height
+#        )
+#    )
+
 # ============================================================
-# UPRIGHT OBJECTS
+# FAUX 3D RAYCASTING
+#this will be used, in future, for making breaking line of sight for enemys
 # ============================================================
 
-##Add extra details, upright objects
+def is_ray_blocking_wall(x, y):
 
-def draw_object(
-    x,
-    y,
-    image,
-    height=OBJECT_HEIGHT
-):
+    #outside of map counts as wall
+    if not (0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT):
+        return True
 
-    center_x, center_y = grid_to_screen(x, y)
+    tile = current_map[y][x]
 
-    image_width = image.get_width()
-    image_height = image.get_height()
+    #currently the debris and machine tiles will count as walls
+    if tile == TILE_DEBRIS:
+        return True
 
+    if tile == TILE_MACHINE:
+        return True
+    
+    return False
 
-    ##keep original proportions of the image, but also allow for height to be added to the image, so it can be seen as upright
+# ============================================================
+# RAYCASTING
+# ============================================================
 
-    scale = min(
-        TILE_WIDTH / image_width,
-        height / image_height
+def cast_ray(angle):
+
+    ray_x = player_x
+    ray_y = player_y
+
+    #from here, I can use intergration to allow for the ray casting by differentiating in regards to x and y
+    ray_dx = math.cos(angle)
+    ray_dy = math.sin(angle)
+
+    distance = 0.0
+
+    while distance < MAX_DEPTH:
+
+        ray_x += ray_dx * 0.02
+        ray_y += ray_dy * 0.02
+
+        distance += 0.02
+
+        map_x = int(ray_x)
+        map_y = int(ray_y)
+
+        if is_ray_blocking_wall(map_x, may_y):
+
+            return distance, map_x, map_y
+
+    return MAX_DEPTH, None, None
+
+# ============================================================
+# DRAW FAUX 3D MAP
+#this will be used to draw the map, different than just the tiles, this will actually be how it looks, the draw function will be the easiest way to do this
+# ============================================================
+
+def draw_faux_map():
+    #sky
+    pygame.draw.rect(
+        screen, 
+        (100, 15, 65),
+        (0, 0, GAME_WIDTH, GAME_HEIGHT // 2)
     )
 
-    new_width = max(
-        1,
-        int(image_width * scale)
-    )
-
-    new_height = max(
-        1,
-        int(image_height * scale)
-    )
-
-    scaled_image = pygame.transform.smoothscale(
-        image,
+    #floor
+    pygame.draw.rect(
+        screen, 
+        (55, 60, 140),
         (
-            new_width,
-            new_height
+            0,
+            GAME_HEIGHT // 2,
+            GAME_WIDTH,
+            GAME_HEIGHT // 2
         )
     )
 
+    column_width = GAME_WIDTH / RAY_COUNT
 
-    #shadow effect for the object, so it looks like it is standing upright
+    for ray_number in range(RAY_COUNT):
 
-    shadow_rect = pygame.Rect(
-        0,
-        0,
-        TILE_WIDTH // 2,
-        TILE_HEIGHT // 4
-    )
+        #position of the ray across the FOV
+        camera_x = ray_number / RAY_COUNT
 
-    shadow_rect.center = (
-        center_x,
-        center_y + 2
-    )
-
-    pygame.draw.ellipse(
-        screen,
-        (20, 20, 20),
-        shadow_rect
-    )
-
-    screen.blit(
-        scaled_image,
-        (
-            center_x - new_width // 2,
-            center_y - new_height
+        ray_angle = (
+            player_angle
+            - FOV / 2
+            + camera_x * FOV
         )
-    )
 
+        distance, hit_x, hit_y = cast_ray(ray_angle)
+
+        #correct distortion
+        corrected_distance = max(
+            distance *
+            math.cos(ray_angle - player_angle)
+        )
+
+        corrected_distance = max(
+            corrected_distance,
+            0.001
+        )
+
+        #height of walls
+        wall_height = (
+            GAME_HEIGHT /
+            corrected_distance
+        )
+
+        wall_height = min(
+            wall_height,
+            GAME_HEIGHT * 2
+        )
+
+        wall_top = (
+            GAME_HEIGHT // 2
+            - wall_height // 2
+        )
+
+        wall_color = (100, 100, 100)
+
+        if hit_x is not None and hit_y is not None:
+
+            tile = current_map[hit_y][hit_x]
+
+            if tile == TILE_DEBRIS:
+                wall_color = (110, 90, 80)
+
+            elif tile == TILE_MACHINE:
+                wall_color = (80, 80, 120)
+
+        pygame.draw.rect(
+            screen,
+            wall_color,
+            (
+                int(ray_number * column_width),
+                int(wall_top),
+                int(column_width) + 1,
+                int(wall_bottom - wall_top)
+                )
+        )
 
 # ============================================================
 # PLAYER DRAWING
@@ -759,24 +944,25 @@ def draw_map():
         )
 
 
-# ============================================================
-# WALKABILITY
-# ============================================================
-
-def is_walkable(x, y):
-
-    if not (0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT):
-        return False
-
-    tile = current_map[y][x]
-
-    #check whether this object blocks movement
-    if tile in OBJECT_PROPERTIES:
-
-        if OBJECT_PROPERTIES[tile]["blocks_movement"]:
-            return False
-
-    return True
+## ============================================================
+## WALKABILITY
+#removed to make 3D collision instead as this code was for isometric functions
+## ============================================================
+#
+#def is_walkable(x, y):
+#
+#    if not (0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT):
+#        return False
+#
+#    tile = current_map[y][x]
+#
+#    #check whether this object blocks movement
+#    if tile in OBJECT_PROPERTIES:
+#
+#        if OBJECT_PROPERTIES[tile]["blocks_movement"]:
+#            return False
+#
+#    return True
 
 # ============================================================
 # CHECK ADJACENCY
