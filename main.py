@@ -41,19 +41,19 @@ enemy_active = False
 player_locked = False
 
 # ============================================================
-# ENEMY SETTINGS
+# ENEMY SETTINGS - temporarily commented out to focus on map
 # ============================================================
-
-# Enemy settings will eventually be moved here so that enemy behaviour can be changed without digging through the rest of the code.
-
-ENEMY_MOVE_COOLDOWN = 100
-enemny_last_move_time = 0
-
-enemy_pos = None
-enemy_direction = (0, 1)
-
-enemy_active = False
-
+#
+## Enemy settings will eventually be moved here so that enemy behaviour can be changed without digging through the rest of the code.
+#
+#ENEMY_MOVE_COOLDOWN = 100
+#enemny_last_move_time = 0
+#
+#enemy_pos = None
+#enemy_direction = (0, 1)
+#
+#enemy_active = False
+#
 # ============================================================
 # TILE IDs
 # ============================================================
@@ -117,16 +117,21 @@ UI_HEIGHT = 100
 SCREEN_WIDTH = GAME_WIDTH
 SCREEN_HEIGHT = GAME_HEIGHT + UI_HEIGHT #Im adding the UI height in case I keep the tile changing logic
 
-FOV = math/pi / 3
+FOV = math.pi / 3
+
+#number of rays is how many raycast rays, the column_width is how many in how small a space (making it accurate)
+NUM_RAYS = 500
+COLUMN_WIDTH = SCREEN_WIDTH / NUM_RAYS
+PLAYER_RADIUS = 0.18
 
 #Max distance the player will see before fog of war
 MAX_DEPTH = 20
 
 #used for raycasting logic for later
 
-MOVE_SPEED = 0.045
+MOVE_SPEED = 3.0
 
-TURN_SPEED = 0.045
+TURN_SPEED = 2.2
 
 #angle the player starts at
 PLAYER_START_ANGLE = -math.pi / 2
@@ -147,13 +152,14 @@ FONT = pygame.font.Font(None, 28)
 
 # ============================================================
 # MAP
+#removed as this is for isometric, not faux 3D
 # ============================================================
-
-## Isometric needs origins
-
-MAP_ORIGIN_X = SCREEN_WIDTH // 2
-MAP_ORIGIN_Y = 180
-
+#
+### Isometric needs origins
+#
+#MAP_ORIGIN_X = SCREEN_WIDTH // 2
+#MAP_ORIGIN_Y = 180
+#
 # ============================================================
 # MAP 1
 # ============================================================
@@ -340,18 +346,20 @@ tile_images = {
 
 # ============================================================
 # FLOOR IMAGES
+#removed as this is for isometric functions
 # ============================================================
-
-##floor images are resized to the size of one isometric tile
-
-floor_images = {}
-
-for tile_id in (0, 1, 5, 6):
-
-    floor_images[tile_id] = pygame.transform.smoothscale(
-        tile_images[tile_id],
-        (TILE_WIDTH, TILE_HEIGHT)
-    )
+#
+###floor images are resized to the size of one isometric tile
+#
+#floor_images = {}
+#
+#for tile_id in (0, 1, 5, 6):
+#
+#    floor_images[tile_id] = pygame.transform.smoothscale(
+#        tile_images[tile_id],
+#        (TILE_WIDTH, TILE_HEIGHT)
+#    )
+#
 
 
 # ============================================================
@@ -364,15 +372,16 @@ player_image = load_image(
 
 # ============================================================
 # ENEMY IMAGES
+#commented out for now
 # ============================================================
-
-# Enemy images are kept separate from normal map objects, this allows enemies to move independently around the map.
-
-enemy_image = load_image(
-    'player.png' #an enemy image will be added, but for the meantime the player image will be a placeholder
-)
-
-
+#
+## Enemy images are kept separate from normal map objects, this allows enemies to move independently around the map.
+#
+#enemy_image = load_image(
+#    'player.png' #an enemy image will be added, but for the meantime the player image will be a placeholder
+#)
+#
+#
 # ============================================================
 # MAP / PLAYER INTERACTIONS
 # ============================================================
@@ -396,13 +405,13 @@ current_map = load_map(current_map_number)
 
 # removed player_pos = list(find_tile(5, current_map)) as it relys on the normal isometric grid
 
-spawn_x, spawn_y = find_tile(5, current_map) #this is the new code that does nearly the same thing- making the player spawn on a tile 5 (the grid checks the same way per, so you always spawn on the left or right one btw)
+spawn_x, spawn_y = find_tile(TILE_ENTRANCE, current_map) #this is the new code that does nearly the same thing- making the player spawn on a tile 5 (the grid checks the same way per, so you always spawn on the left or right one btw)
 
 player_x = spawn_x + 0.5
 player_y = spawn_y + 0.5
 #0.5 was chosen as it allows smaller movements than 1, making it feel like like a grid
 
-player_angle = PLAYER_ANGLE #this is useless in practicality, but if I mispell one, this will fix it
+player_angle = PLAYER_START_ANGLE #this is useless in practicality, but if I mispell one, this will fix it
 
 # ============================================================
 # MAP ROOM PROGRESSION
@@ -456,6 +465,10 @@ def move_to_next_map():
     # Change the actual map
 
     current_map = load_map(current_map_number)
+
+    player_x = spawn_x + 0.5
+    player_y = spawn_y + 0.5
+    player_angle = PLAYER_START_ANGLE
 
     # Start at the entrance
 
@@ -672,114 +685,194 @@ OBJECT_PROPERTIES = {
 #this will be used, in future, for making breaking line of sight for enemys
 # ============================================================
 
-def is_ray_blocking_wall(x, y):
+wall_depth_buffer = [MAX_DEPTH] * NUM_RAYS
 
-    #outside of map counts as wall
-    if not (0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT):
-        return True
+def get_tile(x, y):
 
-    tile = current_map[y][x]
+    x = int(x)
+    y= int(y)
 
-    #currently the debris and machine tiles will count as walls
-    if tile == TILE_DEBRIS:
-        return True
+    if y < 0 or y >= len(current_map):
+        return None
+    if x < 0 or x >= len(current_map):
+        return None
 
-    if tile == TILE_MACHINE:
-        return True
-    
-    return False
+    return current_map[y][x]
+
+def is_wall(x, y):
+
+    tile = get_tile(x, y)
+
+    #block movement and vision
+    return tile in (TILE_DEBRIS, TILE_MACHINE)
+
+def player_can_move_to(x, y):
+    radius = PLAYER_RADIUS
+
+    checks = [
+        (x - radius, y - radius),
+        (x + radius, y - radius),
+        (x - radius, y + radius),
+        (x + radius, y + radius),
+    ]
+
+    for cx, cy in checks:
+
+#outside the map is treated as solid so the player cant walk out of the map
+        if get_tile(cx, cy) is None:
+            return False
+
+        if is_wall(cx, cy):
+            return False
+
+    return True
 
 # ============================================================
 # RAYCASTING
 # ============================================================
 
-def cast_ray(angle):
+def cast_ray(ray_angle):
 
-    ray_x = player_x
-    ray_y = player_y
+    ray_dir_x = math.cos(ray_angle)
+    ray_dir_y = math.sin(ray_angle)
 
     #from here, I can use intergration to allow for the ray casting by differentiating in regards to x and y
-    ray_dx = math.cos(angle)
-    ray_dy = math.sin(angle)
+    map_x = int(player_x)
+    map_y = int(player_y)
 
-    distance = 0.0
-
-    while distance < MAX_DEPTH:
-
-        ray_x += ray_dx * 0.02
-        ray_y += ray_dy * 0.02
-
-        distance += 0.02
-
-        map_x = int(ray_x)
-        map_y = int(ray_y)
-
-        if is_ray_blocking_wall(map_x, may_y):
-
-            return distance, map_x, map_y
-
-    return MAX_DEPTH, None, None
-
-# ============================================================
-# DRAW FAUX 3D MAP
-#this will be used to draw the map, different than just the tiles, this will actually be how it looks, the draw function will be the easiest way to do this
-# ============================================================
-
-def draw_faux_map():
-    #sky
-    pygame.draw.rect(
-        screen, 
-        (100, 15, 65),
-        (0, 0, GAME_WIDTH, GAME_HEIGHT // 2)
+    delta_dist_x = (
+        abs(1 / ray_dir_x)
+        if ray_dir_x != 0
+        else float('inf')
     )
 
-    #floor
+    delta_dist_y = (
+            abs(1 / ray_dir_y)
+            if ray_dir_y != 0
+            else float('inf')
+        )
+
+    if ray_dir_x < 0:
+
+        step_x = -1
+        side_dist_x = (
+            player_x - map_x
+        ) * delta_dist_x
+
+    else:
+
+        step_x = 1
+        side_dist_x = (
+            map_x + 1.0 - player_x
+        ) * delta_dist_x
+
+
+    if ray_dir_y < 0:
+
+        step_y = -1
+        side_dist_y = (
+            player_y - map_y
+        ) * delta_dist_y
+
+    else:
+
+        step_y = 1
+        side_dist_y = (
+            map_y + 1.0 - player_y
+        ) * delta_dist_y
+
+    side = 0
+
+    while True:
+        if side_dist_x < side_dist_y:
+
+            side_dist_x += delta_dist_x
+            map_x += step_x
+            side = 0
+
+        else:
+
+            side_dist_y += delta_dist_y
+            map_y += step_y
+            side = 1
+
+        if (
+            map_x < 0
+            or map_y < 0
+            or map_y >= len(current_map)
+            or map_x >= len(current_map[map_y])
+        ):
+            return MAX_DEPTH, side
+
+        # Only debris and machines are rendered as walls.
+        if is_wall(map_x, map_y):
+
+            if side == 0:
+
+                distance = (
+                    map_x
+                    - player_x
+                    + (1 - step_x) / 2
+                ) / ray_dir_x
+
+            else:
+
+                distance = (
+                    map_y
+                    - player_y
+                    + (1 - step_y) / 2
+                ) / ray_dir_y
+
+            distance = max(distance, 0.001)
+
+            return min(distance, MAX_DEPTH), side
+
+
+def draw_world():
+
+    global wall_depth_buffer
+
+    # Sky
     pygame.draw.rect(
-        screen, 
-        (55, 60, 140),
+        screen,
+        (55, 75, 105),
+        (0, 0, SCREEN_WIDTH, GAME_HEIGHT // 2)
+    )
+
+    # Floor
+    pygame.draw.rect(
+        screen,
+        (45, 45, 45),
         (
             0,
             GAME_HEIGHT // 2,
-            GAME_WIDTH,
+            SCREEN_WIDTH,
             GAME_HEIGHT // 2
         )
     )
 
-    column_width = GAME_WIDTH / RAY_COUNT
+    wall_depth_buffer = [
+        MAX_DEPTH
+        for _ in range(NUM_RAYS)
+    ]
 
-    for ray_number in range(RAY_COUNT):
+    for ray in range(NUM_RAYS):
 
-        #position of the ray across the FOV
-        camera_x = ray_number / RAY_COUNT
+        camera_x = (
+            2 * ray / NUM_RAYS
+        ) - 1
 
         ray_angle = (
             player_angle
-            - FOV / 2
-            + camera_x * FOV
+            + camera_x * (FOV / 2)
         )
 
-        distance, hit_x, hit_y = cast_ray(ray_angle)
+        distance, side = cast_ray(ray_angle)
 
-        #correct distortion
-        corrected_distance = max(
-            distance *
-            math.cos(ray_angle - player_angle)
-        )
+        wall_depth_buffer[ray] = distance
 
-        corrected_distance = max(
-            corrected_distance,
-            0.001
-        )
-
-        #height of walls
-        wall_height = (
-            GAME_HEIGHT /
-            corrected_distance
-        )
-
-        wall_height = min(
-            wall_height,
-            GAME_HEIGHT * 2
+        wall_height = int(
+            GAME_HEIGHT / distance
         )
 
         wall_top = (
@@ -787,163 +880,304 @@ def draw_faux_map():
             - wall_height // 2
         )
 
-        wall_color = (100, 100, 100)
+        wall_bottom = (
+            GAME_HEIGHT // 2
+            + wall_height // 2
+        )
 
-        if hit_x is not None and hit_y is not None:
+        # Match the reference's distance shading.
+        brightness = max(
+            35,
+            min(
+                210,
+                int(220 / (1 + distance * 0.08))
+            )
+        )
 
-            tile = current_map[hit_y][hit_x]
+        # One side of a wall is slightly darker.
+        if side == 1:
+            brightness = int(
+                brightness * 0.75
+            )
 
-            if tile == TILE_DEBRIS:
-                wall_color = (110, 90, 80)
+        # Keep your different object types visually distinct.
+        hit_x = int(
+            player_x + math.cos(ray_angle) * distance
+        )
+        hit_y = int(
+            player_y + math.sin(ray_angle) * distance
+        )
 
-            elif tile == TILE_MACHINE:
-                wall_color = (80, 80, 120)
+        tile = get_tile(hit_x, hit_y)
+
+        if tile == TILE_DEBRIS:
+            wall_colour = (
+                int(brightness * 0.75),
+                int(brightness * 0.65),
+                int(brightness * 0.60)
+            )
+
+        elif tile == TILE_MACHINE:
+            wall_colour = (
+                int(brightness * 0.60),
+                int(brightness * 0.60),
+                int(brightness * 0.85)
+            )
+
+        else:
+            wall_colour = (
+                brightness,
+                brightness,
+                brightness
+            )
+
+        x = int(
+            ray * SCREEN_WIDTH / NUM_RAYS
+        )
+
+        width = math.ceil(
+            SCREEN_WIDTH / NUM_RAYS
+        ) + 1
 
         pygame.draw.rect(
             screen,
-            wall_color,
+            wall_colour,
             (
-                int(ray_number * column_width),
-                int(wall_top),
-                int(column_width) + 1,
-                int(wall_bottom - wall_top)
-                )
+                x,
+                wall_top,
+                width,
+                wall_bottom - wall_top
+            )
         )
 
+
+# ============================================================
+# DRAW FAUX 3D MAP
+#this will be used to draw the map, different than just the tiles, this will actually be how it looks, the draw function will be the easiest way to do this
+#removed, replaced with draw_world
+# ============================================================
+#
+#def draw_faux_map():
+#    #sky
+#    pygame.draw.rect(
+#        screen, 
+#        (100, 15, 65),
+#        (0, 0, GAME_WIDTH, GAME_HEIGHT // 2)
+#    )
+#
+#    #floor
+#    pygame.draw.rect(
+#        screen, 
+#        (55, 60, 140),
+#        (
+#            0,
+#            GAME_HEIGHT // 2,
+#            GAME_WIDTH,
+#            GAME_HEIGHT // 2
+#        )
+#    )
+#
+#    column_width = GAME_WIDTH / RAY_COUNT
+#
+#    for ray_number in range(RAY_COUNT):
+#
+#        #position of the ray across the FOV
+#        camera_x = ray_number / RAY_COUNT
+#
+#        ray_angle = (
+#            player_angle
+#            - FOV / 2
+#            + camera_x * FOV
+#        )
+#
+#        distance, hit_x, hit_y = cast_ray(ray_angle)
+#
+#        #correct distortion
+#        corrected_distance = max(
+#            distance *
+#            math.cos(ray_angle - player_angle)
+#        )
+#
+#        corrected_distance = max(
+#            corrected_distance,
+#            0.001
+#        )
+#
+#        #height of walls
+#        wall_height = (
+#            GAME_HEIGHT /
+#            corrected_distance
+#        )
+#
+#        wall_height = min(
+#            wall_height,
+#            GAME_HEIGHT * 2
+#        )
+#
+#        wall_top = (
+#            GAME_HEIGHT // 2
+#            - wall_height // 2
+#        )
+#
+#        wall_color = (100, 100, 100)
+#
+#        if hit_x is not None and hit_y is not None:
+#
+#            tile = current_map[hit_y][hit_x]
+#
+#            if tile == TILE_DEBRIS:
+#                wall_color = (110, 90, 80)
+#
+#            elif tile == TILE_MACHINE:
+#                wall_color = (80, 80, 120)
+#
+#        pygame.draw.rect(
+#            screen,
+#            wall_color,
+#            (
+#                int(ray_number * column_width),
+#                int(wall_top),
+#                int(column_width) + 1,
+#                int(wall_bottom - wall_top)
+#                )
+#        )
+#
 # ============================================================
 # PLAYER DRAWING
+#removed- this code has already been fufilled by the FOV
 # ============================================================
 
 ##draw player
-
-def draw_player():
-
-    x, y = player_pos
-
-    center_x, center_y = grid_to_screen(x, y)
-
-    image_width = player_image.get_width()
-    image_height = player_image.get_height()
-
-
-    #keep proportions of the player image, but also allow for height to be added to the image, so it can be seen as upright
-
-    scale = min(
-        TILE_WIDTH / image_width,
-        PLAYER_HEIGHT / image_height
-    )
-
-    new_width = max(
-        1,
-        int(image_width * scale)
-    )
-
-    new_height = max(
-        1,
-        int(image_height * scale)
-    )
-
-    scaled_player_image = pygame.transform.smoothscale(
-        player_image,
-        (
-            new_width,
-            new_height
-        )
-    )
-
-
-    ##player shadow effect, so it looks like it is standing upright
-
-    shadow_rect = pygame.Rect(
-        0,
-        0,
-        TILE_WIDTH // 2,
-        TILE_HEIGHT // 4
-    )
-
-    shadow_rect.center = (
-        center_x,
-        center_y + 2
-    )
-
-    pygame.draw.ellipse(
-        screen,
-        (20, 20, 20),
-        shadow_rect
-    )
-
-    screen.blit(
-        scaled_player_image,
-        (
-            center_x - new_width // 2,
-            center_y - new_height
-        )
-    )
-
-
+#
+#def draw_player():
+#
+#    x, y = player_pos
+#
+#    center_x, center_y = grid_to_screen(x, y)
+#
+#    image_width = player_image.get_width()
+#    image_height = player_image.get_height()
+#
+#
+#    #keep proportions of the player image, but also allow for height to be added to the image, so it can be seen as upright
+#
+#    scale = min(
+#        TILE_WIDTH / image_width,
+#        PLAYER_HEIGHT / image_height
+#    )
+#
+#    new_width = max(
+#        1,
+#        int(image_width * scale)
+#    )
+#
+#    new_height = max(
+#        1,
+#        int(image_height * scale)
+#    )
+#
+#    scaled_player_image = pygame.transform.smoothscale(
+#        player_image,
+#        (
+#            new_width,
+#            new_height
+#        )
+#    )
+#
+#
+#    ##player shadow effect, so it looks like it is standing upright
+#
+#    shadow_rect = pygame.Rect(
+#        0,
+#        0,
+#        TILE_WIDTH // 2,
+#        TILE_HEIGHT // 4
+#    )
+#
+#    shadow_rect.center = (
+#        center_x,
+#        center_y + 2
+#    )
+#
+#    pygame.draw.ellipse(
+#        screen,
+#        (20, 20, 20),
+#        shadow_rect
+#    )
+#
+#    screen.blit(
+#        scaled_player_image,
+#        (
+#            center_x - new_width // 2,
+#            center_y - new_height
+#        )
+#    )
+#
+#
 # ============================================================
 # DRAW MAP
+#also removed, replaced with draw_world
 # ============================================================
-
-def draw_map():
-
-    for y in range(MAP_HEIGHT):
-
-        for x in range(MAP_WIDTH):
-
-            tile = current_map[y][x]
-
-            if tile in floor_images:
-
-                draw_floor_tile(
-                    x,
-                    y,
-                    floor_images[tile]
-                )
-
-            else:
-
-                draw_failsafe_floor(
-                    x,
-                    y
-                )
-
-
-    objects = []
-
-    for y in range(MAP_HEIGHT):
-
-        for x in range(MAP_WIDTH):
-
-            tile = current_map[y][x]
-
-            if tile in (2, 3):
-
-                objects.append(
-                    (
-                        x + y,
-                        x,
-                        y,
-                        tile_images[tile]
-                    )
-                )
-
-
-
-    objects.sort(
-        key=lambda item: item[0]
-    )
-
-
-    for depth, x, y, image in objects:
-
-        draw_object(
-            x,
-            y,
-            image
-        )
-
-
+#
+#def draw_map():
+#
+#    for y in range(MAP_HEIGHT):
+#
+#        for x in range(MAP_WIDTH):
+#
+#            tile = current_map[y][x]
+#
+#            if tile in floor_images:
+#
+#                draw_floor_tile(
+#                    x,
+#                    y,
+#                    floor_images[tile]
+#                )
+#
+#            else:
+#
+#                draw_failsafe_floor(
+#                    x,
+#                    y
+#                )
+#
+#
+#    objects = []
+#
+#    for y in range(MAP_HEIGHT):
+#
+#        for x in range(MAP_WIDTH):
+#
+#            tile = current_map[y][x]
+#
+#            if tile in (2, 3):
+#
+#                objects.append(
+#                    (
+#                        x + y,
+#                        x,
+#                        y,
+#                        tile_images[tile]
+#                    )
+#                )
+#
+#
+#
+#    objects.sort(
+#        key=lambda item: item[0]
+#    )
+#
+#
+#    for depth, x, y, image in objects:
+#
+#        draw_object(
+#            x,
+#            y,
+#            image
+#        )
+#
+#
 ## ============================================================
 ## WALKABILITY
 #removed to make 3D collision instead as this code was for isometric functions
@@ -966,94 +1200,95 @@ def draw_map():
 
 # ============================================================
 # CHECK ADJACENCY
+#this will be fixed as player_pos no longer exists, so I will fix this section
 # ============================================================
 #this will be used to only make tile changer usable in certain situations, I will use this for later puzzles
 
 def is_adjacent_to_tile(tile_value): #tile value must be a seperate function of tile_value = 3 for example
 
-    player_x, player_y = player_pos
+    interaction_distance = 1.25
 
-    adjacent_tiles = [
-        (player_x - 1, player_y),  # Left
-        (player_x + 1, player_y),  # Right
-        (player_x, player_y - 1),  # Up
-        (player_x, player_y + 1)   # Down
-    ]
+    for y, row in enumerate(current_map):
 
-    for x, y in adjacent_tiles:
-        if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
-            if current_map[y][x] == tile_value:
-                return True
+        for x, tile in enumerate(row):
 
+            if tile == tile_value:
+
+                tile_x = x + 0.5
+                tile_y = y + 0.5
+
+                distance = math.hypot(
+                    player_x - tile_x,
+                    player_y - tile_y
+                )
+
+                if distance <= interaction_distance:
+                    return True
+            
     return False
-
 # ============================================================
 # PLAYER MOVEMENT
+#uses player_pos which no longer exists, so im fixing this section aswell
 # ============================================================
 
 ##player movement
 
-def update_player_movement():
+def update_player_movement(dt):
 
-    global player_pos, last_move_time
-
-    current_time = pygame.time.get_ticks()
-
-    new_x, new_y = player_pos
-
+    global player_x, player_y, player_angle
     keys = pygame.key.get_pressed()
 
 
-    # 2. Check if enough time has passed since the last move
+        # Turning
+    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+        player_angle -= TURN_SPEED * dt
 
-    if current_time - last_move_time >= MOVE_COOLDOWN:
+    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+        player_angle += TURN_SPEED * dt
 
-        moved = False
+    # Movement direction
+    move_x = 0
+    move_y = 0
 
+    forward_x = math.cos(player_angle)
+    forward_y = math.sin(player_angle)
 
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+    right_x = math.cos(player_angle + math.pi / 2)
+    right_y = math.sin(player_angle + math.pi / 2)
 
-            if is_walkable(new_x - 1, new_y):
+    if keys[pygame.K_w] or keys[pygame.K_UP]:
+        move_x += forward_x
+        move_y += forward_y
 
-                new_x -= 1
-                moved = True
+    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+        move_x -= forward_x
+        move_y -= forward_y
 
+    if keys[pygame.K_q]:
+        move_x -= right_x
+        move_y -= right_y
 
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+    if keys[pygame.K_e]:
+        move_x += right_x
+        move_y += right_y
 
-            if is_walkable(new_x + 1, new_y):
+    # Normalise movement
+    length = math.hypot(move_x, move_y)
 
-                new_x += 1
-                moved = True
+    if length > 0:
+        move_x /= length
+        move_y /= length
 
+        movement = MOVE_SPEED * dt
 
-        if keys[pygame.K_w] or keys[pygame.K_UP]:
+        new_x = player_x + move_x * movement
+        new_y = player_y + move_y * movement
 
-            if is_walkable(new_x, new_y - 1):
+        if player_can_move_to(new_x, player_y):
+            player_x = new_x
 
-                new_y -= 1
-                moved = True
-
-
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-
-            if is_walkable(new_x, new_y + 1):
-
-                new_y += 1
-                moved = True
-
-
-        # 3. If the player moved, update the position and reset the cooldown timer
-
-        if moved:
-
-            player_pos = [new_x, new_y]
-            last_move_time = current_time
-
-            if current_map[new_y][new_x] == 6:
-
-                move_to_next_map()
-
+        if player_can_move_to(player_x, new_y):
+            player_y = new_y
 # ============================================================
 # ENEMY MOVEMENT
 # ============================================================
@@ -1392,6 +1627,8 @@ running = True
 
 while running:
 
+    dt = clock.tick(60) / 1000.0
+
     #python events
 
     for event in pygame.event.get():
@@ -1457,7 +1694,10 @@ while running:
 
     #player movement
 
-    update_player_movement()
+    update_player_movement(dt)
+
+    if get_tile(player_x, player_y) == TILE_EXIT:
+        move_to_next_map()
 
 
     # ========================================================
@@ -1468,40 +1708,41 @@ while running:
 
     screen.fill((0, 0, 0))
 
+    draw_world()
+
     draw_room_number()
 
-    draw_map()
-
-
-    draw_player()
+# removed draw_player() as it's function is already being done by other code
+    
 
     # ============================================================
     # ENEMY DRAWING
+    #temporarily commented out until faux 3D map has been made, as its the main priority
     # ============================================================
-
-    def draw_enemy():
-        if not enemy_active:
-            return
-
-        if enemy_position is None:
-            return
-
-        x, y = enemy_position
-
-        center_x, center_y = grid_to_screen(x, y)
-
-        image_width = enemy_image.get.width()
-        image_height = enemy_image.get.height()
-
-        shadow_rect.center = (
-            center_x, center_y + 2
-        )
-
-        pygame.draw.ellipse(
-            screen,
-            (20, 20, 20),
-            shadow_rect
-        )
+#
+#    def draw_enemy():
+#        if not enemy_active:
+#            return
+#
+#        if enemy_position is None:
+#            return
+#
+#        x, y = enemy_position
+#
+#        center_x, center_y = grid_to_screen(x, y)
+#
+#        image_width = enemy_image.get.width()
+#        image_height = enemy_image.get.height()
+#
+#        shadow_rect.center = (
+#            center_x, center_y + 2
+#        )
+#
+#        pygame.draw.ellipse(
+#            screen,
+#            (20, 20, 20),
+#            shadow_rect
+#        )
 
     #draw input controls
     if is_adjacent_to_tile(3):
@@ -1514,8 +1755,6 @@ while running:
     # Update the display as per FPS
 
     pygame.display.flip()
-
-    clock.tick(60)
 
 
     # Movement logic for player
