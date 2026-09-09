@@ -359,17 +359,10 @@ tile_images = {
 
 # ============================================================
 # FAUX 3D TEXTURES
-<<<<<<< HEAD
 # used to get the textures for the wall, roof, and door, these are just placeholders for now
 # ============================================================
 
 wall_texture = load_image("grass.png")
-=======
-# holds sprites for my map to look better
-# ============================================================
-
-wall_texture = load_image("tile.png")
->>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
 roof_texture = load_image("water.png")
 door_texture = load_image("enemy.png")
 
@@ -891,18 +884,13 @@ def draw_world():
 
     global wall_depth_buffer
 
-<<<<<<< HEAD
 #largely removed as this is a draw function, not using the assets I want
     ## Sky
-=======
-    # Sky- being replaced to attempt roof testing
->>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
     #pygame.draw.rect(
     #    screen,
     #    (55, 75, 105),
     #    (0, 0, SCREEN_WIDTH, GAME_HEIGHT // 2)
     #)
-<<<<<<< HEAD
 #
     ## Floor
     #pygame.draw.rect(
@@ -1019,21 +1007,12 @@ def draw_world():
 # DRAW ROOF
 #will have the roof use a texture
 # ========================================================
-=======
-
-    #textured roof
->>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
 
     roof_scaled = pygame.transform.smoothscale(
         roof_texture,
         (
-<<<<<<< HEAD
                 SCREEN_WIDTH,
                 SCREEN_HEIGHT // 2
-=======
-            SCREEN_WIDTH,
-            GAME_HEIGHT // 2
->>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
         )
     )
 
@@ -1041,16 +1020,12 @@ def draw_world():
         roof_scaled,
         (0, 0)
     )
-<<<<<<< HEAD
 
 # ========================================================
 # DRAW FLOOR
 #will have the floor use a texture
 # ========================================================
 
-=======
-    # Floor
->>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
     pygame.draw.rect(
         screen,
         (45, 45, 45),
