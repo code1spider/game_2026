@@ -359,10 +359,17 @@ tile_images = {
 
 # ============================================================
 # FAUX 3D TEXTURES
+<<<<<<< HEAD
 # used to get the textures for the wall, roof, and door, these are just placeholders for now
 # ============================================================
 
 wall_texture = load_image("grass.png")
+=======
+# holds sprites for my map to look better
+# ============================================================
+
+wall_texture = load_image("tile.png")
+>>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
 roof_texture = load_image("water.png")
 door_texture = load_image("enemy.png")
 
@@ -884,13 +891,18 @@ def draw_world():
 
     global wall_depth_buffer
 
+<<<<<<< HEAD
 #largely removed as this is a draw function, not using the assets I want
     ## Sky
+=======
+    # Sky- being replaced to attempt roof testing
+>>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
     #pygame.draw.rect(
     #    screen,
     #    (55, 75, 105),
     #    (0, 0, SCREEN_WIDTH, GAME_HEIGHT // 2)
     #)
+<<<<<<< HEAD
 #
     ## Floor
     #pygame.draw.rect(
@@ -1007,12 +1019,21 @@ def draw_world():
 # DRAW ROOF
 #will have the roof use a texture
 # ========================================================
+=======
+
+    #textured roof
+>>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
 
     roof_scaled = pygame.transform.smoothscale(
         roof_texture,
         (
+<<<<<<< HEAD
                 SCREEN_WIDTH,
                 SCREEN_HEIGHT // 2
+=======
+            SCREEN_WIDTH,
+            GAME_HEIGHT // 2
+>>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
         )
     )
 
@@ -1020,12 +1041,16 @@ def draw_world():
         roof_scaled,
         (0, 0)
     )
+<<<<<<< HEAD
 
 # ========================================================
 # DRAW FLOOR
 #will have the floor use a texture
 # ========================================================
 
+=======
+    # Floor
+>>>>>>> 9ad24fd61ad7882500dc56620a2c335e8c0f5c7b
     pygame.draw.rect(
         screen,
         (45, 45, 45),
@@ -1627,6 +1652,13 @@ def is_adjacent_to_tile(tile_value): #tile value must be a seperate function of 
                     return True
             
     return False
+
+def exitable():
+    return is_adjacent_to_tile(TILE_EXIT)
+
+def next_room():
+    if exitable():
+        move_to_next_map()
 # ============================================================
 # PLAYER MOVEMENT
 #uses player_pos which no longer exists, so im fixing this section aswell
@@ -1664,14 +1696,14 @@ def update_player_movement(dt):
     if keys[pygame.K_s] or keys[pygame.K_DOWN]:
         move_x -= forward_x
         move_y -= forward_y
-
-    if keys[pygame.K_q]:
-        move_x -= right_x
-        move_y -= right_y
-
-    if keys[pygame.K_e]:
-        move_x += right_x
-        move_y += right_y
+    #commented out to free E key for now
+    #if keys[pygame.K_q]:
+    #    move_x -= right_x
+    #    move_y -= right_y
+#
+    #if keys[pygame.K_e]:
+    #    move_x += right_x
+    #    move_y += right_y
 
     # Normalise movement
     length = math.hypot(move_x, move_y)
@@ -1994,6 +2026,51 @@ def Draw_Input_boxes():
     )
 
 # ============================================================
+# exit prompt
+#will make a popup to leave when adjacent to or on an exit
+# ============================================================
+
+def draw_exit_prompt():
+
+    if not exitable():
+        return
+
+    prompt_text = FONT.render(
+        "Press E to interact",
+        True,
+        (255, 255, 255)
+    )
+
+    prompt_rect = prompt_text.get_rect(
+        center=(
+            SCREEN_WIDTH // 2,
+            GAME_HEIGHT - 50
+        )
+    )
+
+    #background
+
+    background_rect = prompt_rect.inflate(30, 15)
+
+    pygame.draw.rect(
+        screen,
+        (20, 20, 20),
+        background_rect
+    )
+
+    pygame.draw.rect(
+        screen,
+        (255, 255, 255),
+        background_rect,
+        2
+    )
+
+    screen.blit(
+        prompt_text,
+        prompt_rect
+    )
+
+# ============================================================
 # ROOM NUMBER DISPLAY
 # ============================================================
 
@@ -2068,6 +2145,11 @@ while running:
 
             #only works if a box is selected
 
+            if event.key == pygame.K_e:
+
+                if exitable():
+                    next_room()
+
             if active_box is not None:
 
                 #backspace
@@ -2096,9 +2178,10 @@ while running:
     #player movement
 
     update_player_movement(dt)
+#removed this code to prevent instant leaving
 
-    if get_tile(player_x, player_y) == TILE_EXIT:
-        move_to_next_map()
+#    if get_tile(player_x, player_y) == TILE_EXIT:
+#        move_to_next_map()
 
 
     # ========================================================
@@ -2112,6 +2195,8 @@ while running:
     draw_world()
 
     draw_room_number()
+
+    draw_exit_prompt()
 
 # removed draw_player() as it's function is already being done by other code
     
