@@ -357,6 +357,14 @@ tile_images = {
     6: load_image("doorshadow.png"),
 }
 
+# ============================================================
+# FAUX 3D TEXTURES
+# used to get the textures for the wall, roof, and door, these are just placeholders for now
+# ============================================================
+
+wall_texture = load_image("grass.png")
+roof_texture = load_image("water.png")
+door_texture = load_image("enemy.png")
 
 # ============================================================
 # FLOOR IMAGES
@@ -439,10 +447,14 @@ specific_map_connections = {
 
 def move_to_next_map():
 
+#added more code to use for my textures 
+
     #changed global current_map_number, current_map, player_pos to exclude player_pos
     global current_map_number, current_map
-    global player_x, player_y
-
+    global current_map
+    global player_x
+    global player_y
+    global player_angle
     global room_number
 
     room_number += 1
@@ -479,10 +491,36 @@ def move_to_next_map():
     # Change the actual map
 
     current_map = load_map(current_map_number)
+# reworked the below code as my globals have changed
+#    player_x = spawn_x + 0.5
+#    player_y = spawn_y + 0.5
+#    player_angle = PLAYER_START_ANGLE
+
+    spawn = find_tile(
+        TILE_ENTRANCE,
+        current_map
+    )
+
+    #will return an error if the map, for any reason, lacks an entrance
+    if spawn is None:
+
+        raise ValueError(
+            f'Map {current_map_number + 1} '
+            'does not contain an entrance tile'
+        )
+
+    spawn_x, spawn_y = spawn
+
+    #put the player in the middle of the entrance tiles- makes the game more uniform and clean since it uses an even amount of space
 
     player_x = spawn_x + 0.5
     player_y = spawn_y + 0.5
+
+    # Reset facing direction
+
     player_angle = PLAYER_START_ANGLE
+
+
 
     # Start at the entrance
 
@@ -846,29 +884,173 @@ def draw_world():
 
     global wall_depth_buffer
 
-    # Sky
-    pygame.draw.rect(
-        screen,
-        (55, 75, 105),
-        (0, 0, SCREEN_WIDTH, GAME_HEIGHT // 2)
+#largely removed as this is a draw function, not using the assets I want
+    ## Sky
+    #pygame.draw.rect(
+    #    screen,
+    #    (55, 75, 105),
+    #    (0, 0, SCREEN_WIDTH, GAME_HEIGHT // 2)
+    #)
+#
+    ## Floor
+    #pygame.draw.rect(
+    #    screen,
+    #    (45, 45, 45),
+    #    (
+    #        0,
+    #        GAME_HEIGHT // 2,
+    #        SCREEN_WIDTH,
+    #        GAME_HEIGHT // 2
+    #    )
+    #)
+#
+    #wall_depth_buffer = [
+    #    MAX_DEPTH
+    #    for _ in range(NUM_RAYS)
+    #]
+#
+    #for ray in range(NUM_RAYS):
+#
+    #    camera_x = (
+    #        2 * ray / NUM_RAYS
+    #    ) - 1
+#
+    #    ray_angle = (
+    #        player_angle
+    #        + camera_x * (FOV / 2)
+    #    )
+#
+    #    distance, side = cast_ray(ray_angle)
+#
+    #    wall_depth_buffer[ray] = distance
+#
+    #    wall_height = int(
+    #        GAME_HEIGHT / distance
+    #    )
+#
+    #    wall_top = (
+    #        GAME_HEIGHT // 2
+    #        - wall_height // 2
+    #    )
+#
+    #    wall_bottom = (
+    #        GAME_HEIGHT // 2
+    #        + wall_height // 2
+    #    )
+#
+    #    # Match the reference's distance shading.
+    #    brightness = max(
+    #        35,
+    #        min(
+    #            210,
+    #            int(220 / (1 + distance * 0.08))
+    #        )
+    #    )
+#
+    #    # One side of a wall is slightly darker.
+    #    if side == 1:
+    #        brightness = int(
+    #            brightness * 0.75
+    #        )
+#
+    #    # Keep your different object types visually distinct.
+    #    hit_x = int(
+    #        player_x + math.cos(ray_angle) * distance
+    #    )
+    #    hit_y = int(
+    #        player_y + math.sin(ray_angle) * distance
+    #    )
+#
+    #    tile = get_tile(hit_x, hit_y)
+#
+    #    if tile == TILE_DEBRIS:
+    #        wall_colour = (
+    #            int(brightness * 0.75),
+    #            int(brightness * 0.65),
+    #            int(brightness * 0.60)
+    #        )
+#
+    #    elif tile == TILE_MACHINE:
+    #        wall_colour = (
+    #            int(brightness * 0.60),
+    #            int(brightness * 0.60),
+    #            int(brightness * 0.85)
+    #        )
+#
+    #    else:
+    #        wall_colour = (
+    #            brightness,
+    #            brightness,
+    #            brightness
+    #        )
+#
+    #    x = int(
+    #        ray * SCREEN_WIDTH / NUM_RAYS
+    #    )
+#
+    #    width = math.ceil(
+    #        SCREEN_WIDTH / NUM_RAYS
+    #    ) + 1
+#
+    #    pygame.draw.rect(
+    #        screen,
+    #        wall_colour,
+    #        (
+    #            x,
+    #            wall_top,
+    #            width,
+    #            wall_bottom - wall_top
+    #        )
+    #    )
+
+# ========================================================
+# DRAW ROOF
+#will have the roof use a texture
+# ========================================================
+
+    roof_scaled = pygame.transform.smoothscale(
+        roof_texture,
+        (
+                SCREEN_WIDTH,
+                SCREEN_HEIGHT // 2
+        )
     )
 
-    # Floor
+    screen.blit(
+        roof_scaled,
+        (0, 0)
+    )
+
+# ========================================================
+# DRAW FLOOR
+#will have the floor use a texture
+# ========================================================
+
     pygame.draw.rect(
         screen,
         (45, 45, 45),
         (
-            0,
-            GAME_HEIGHT // 2,
-            SCREEN_WIDTH,
-            GAME_HEIGHT // 2
+                0,
+                GAME_HEIGHT // 2,
+                SCREEN_WIDTH,
+                GAME_HEIGHT // 2
         )
     )
+
+# ========================================================
+# Reset depth buffer
+# needed to make player perseption work properly
+# ========================================================
 
     wall_depth_buffer = [
         MAX_DEPTH
         for _ in range(NUM_RAYS)
     ]
+
+# ========================================================
+# Raycasting Every Column
+
+# ========================================================
 
     for ray in range(NUM_RAYS):
 
@@ -881,86 +1063,291 @@ def draw_world():
             + camera_x * (FOV / 2)
         )
 
-        distance, side = cast_ray(ray_angle)
+        distance, side = cast_ray(
+            ray_angle
+        )
 
         wall_depth_buffer[ray] = distance
+
+# ========================================================
+# Walls
+#needed to make the walls have a limit
+# ========================================================
 
         wall_height = int(
             GAME_HEIGHT / distance
         )
-
+    
         wall_top = (
             GAME_HEIGHT // 2
             - wall_height // 2
         )
-
+    
         wall_bottom = (
             GAME_HEIGHT // 2
             + wall_height // 2
         )
-
-        # Match the reference's distance shading.
+    
+    # ====================================================
+    # DISTANCE SHADING
+    # ====================================================
+    
         brightness = max(
             35,
             min(
                 210,
-                int(220 / (1 + distance * 0.08))
+                int(
+                    220 /
+                    (1 + distance * 0.08)
+                )
             )
         )
-
-        # One side of a wall is slightly darker.
-        if side == 1:
-            brightness = int(
-                brightness * 0.75
-            )
-
-        # Keep your different object types visually distinct.
-        hit_x = int(
-            player_x + math.cos(ray_angle) * distance
+    
+        hit_x_exact = (
+            player_x
+            + math.cos(ray_angle) * distance
         )
-        hit_y = int(
-            player_y + math.sin(ray_angle) * distance
+    
+        hit_y_exact = (
+            player_y
+            + math.sin(ray_angle) * distance
         )
-
-        tile = get_tile(hit_x, hit_y)
-
-        if tile == TILE_DEBRIS:
-            wall_colour = (
-                int(brightness * 0.75),
-                int(brightness * 0.65),
-                int(brightness * 0.60)
-            )
-
-        elif tile == TILE_MACHINE:
-            wall_colour = (
-                int(brightness * 0.60),
-                int(brightness * 0.60),
-                int(brightness * 0.85)
-            )
-
+    
+        hit_x = int(hit_x_exact)
+        hit_y = int(hit_y_exact)
+    
+        tile = get_tile(
+            hit_x,
+            hit_y
+        )
+    
+    # ====================================================
+    # choose textures
+    # ====================================================
+    
+        if tile == TILE_EXIT:
+        
+            current_wall_texture = door_texture
+    
         else:
-            wall_colour = (
-                brightness,
-                brightness,
-                brightness
-            )
-
+        
+            current_wall_texture = wall_texture
+    
         x = int(
             ray * SCREEN_WIDTH / NUM_RAYS
         )
-
+    
+        width = (
+            math.ceil(
+                SCREEN_WIDTH / NUM_RAYS
+            ) + 1
+        )
+    
+    # ====================================================
+    # find texture position
+    # ====================================================
+    
+        texture_width = (
+            current_wall_texture.get_width()
+        )
+    
+        texture_height = (
+            current_wall_texture.get_height()
+        )
+    
+        if side == 0:
+        
+            wall_position = hit_y_exact
+    
+        else:
+        
+            wall_position = hit_x_exact
+    
+        texture_position = (
+            wall_position
+            - math.floor(wall_position)
+        )
+    
+        texture_x = int(
+            texture_position
+            * texture_width
+        )
+    
+        texture_x = max(
+            0,
+            min(
+                texture_width - 1,
+                texture_x
+            )
+        )
+    
+            # ====================================================
+            # GET ONE VERTICAL STRIP
+            # ====================================================
+    
+        texture_column = (
+            current_wall_texture.subsurface(
+                pygame.Rect(
+                    texture_x,
+                    0,
+                    1,
+                    texture_height
+                )
+            )
+        )
+    
+            # ====================================================
+            # STRETCH STRIP TO WALL HEIGHT
+            # ====================================================
+    
+        texture_column = pygame.transform.scale(
+            texture_column,
+            (
+                width,
+                max(
+                    1,
+                    wall_bottom - wall_top
+                )
+            )
+        )
+    
+            # ====================================================
+            # shading
+            # ====================================================
+    
+        shade_surface = pygame.Surface(
+            texture_column.get_size(),
+            pygame.SRCALPHA
+        )
+        shade_amount = (
+            255 - brightness
+        )
+    
+        shade_surface.fill(
+            (
+                0,
+                0,
+                0,
+                shade_amount
+            )
+        )
+    
+        texture_column.blit(
+            shade_surface,
+            (0, 0)
+        )
+    
+        #draw wall column
+    
+        screen.blit(
+            texture_column,
+            (
+                x,
+                wall_top
+            )
+        )
+    
+        #wall texture
+    
+        if tile == TILE_EXIT:
+        
+            current_wall_texture = door_texture
+    
+        else:
+        
+            current_wall_texture = wall_texture
+    
+        x = int(
+            ray * SCREEN_WIDTH / NUM_RAYS
+        )
+    
         width = math.ceil(
             SCREEN_WIDTH / NUM_RAYS
         ) + 1
-
-        pygame.draw.rect(
-            screen,
-            wall_colour,
+    
+        #draw wall
+    
+        texture_width = current_wall_texture.get_width()
+        texture_height = current_wall_texture.get_height()
+    
+        hit_x_exact = (
+            player_x
+            + math.cos(ray_angle) * distance
+        )
+    
+        hit_y_exact = (
+            player_y
+            + math.sin(ray_angle) * distance
+        )
+    
+        if side == 0:
+        
+            wall_position = hit_y_exact
+    
+        else:
+        
+            wall_position = hit_x_exact
+    
+        texture_position = (
+                wall_position
+                - math.floor(wall_position)
+            )
+    
+        texture_x = int(
+            texture_position * texture_width
+        )
+        # Prevent texture_x going outside the image.
+        texture_x = max(
+            0,
+            min(
+                texture_width - 1,
+                texture_x
+            )
+        )
+        # Get one vertical strip from the wall texture.
+        texture_column = current_wall_texture.subsurface(
+            pygame.Rect(
+                texture_x,
+                0,
+                1,
+                texture_height
+            )
+        )
+        # Stretch that strip to the height of the wall.
+        texture_column = pygame.transform.scale(
+            texture_column,
+            (
+                width,
+                max(
+                    1,
+                    wall_bottom - wall_top
+                )
+            )
+        )
+        # Apply distance shading.
+        shade_surface = pygame.Surface(
+            texture_column.get_size(),
+            pygame.SRCALPHA
+        )
+        shade_amount = 255 - brightness
+        shade_surface.fill(
+            (
+                0,
+                0,
+                0,
+                shade_amount
+            )
+        )
+        texture_column.blit(
+            shade_surface,
+            (0, 0)
+        )
+        # Draw the wall column.
+        screen.blit(
+            texture_column,
             (
                 x,
-                wall_top,
-                width,
-                wall_bottom - wall_top
+                wall_top
             )
         )
 
@@ -1320,7 +1707,7 @@ def update_enemy():
     if enemy_position is None:
         return
 
-    current_time = pygame.time.get.ticks()
+    current_time = pygame.time.get_ticks()
 
     if current_time - enemy_last_move_time < ENEMY_MOVE_COOLDOWN:
         return
