@@ -41,6 +41,88 @@ enemy_active = False
 player_locked = False
 
 # ============================================================
+# enemy 2
+# ============================================================
+
+ENEMY_2_FIRST_ROOM = 20
+ENEMY_2_LATER_CHANCE = 0.05
+
+#time until active
+
+FLUX_COOLDOWN = 10000
+
+#active duration
+FLUX_ACTIVE_DURATION = 2500
+FLUX_SHAKE_DURATION = 2000
+ENEMY_SHAKE_AMOUNT = 5
+
+#lights flicker
+SPAWN_FLICKER_DURATION = 2000
+
+# ============================================================
+# screen shake
+# ============================================================
+
+FLUX_PRE_SHAKE_DURATION = 1500
+
+FLUX_POST_SHAKE_DURATION = 1500
+
+FLUX_MILD_SHAKE_AMOUNT = 3
+
+FLUX_MAJOR_SHAKE_AMOUNT = 8
+
+SHAKE_UPDATE_INTERVAL = 35
+
+# ============================================================
+# enemy 3
+# ============================================================
+
+COWARDICE_LOCKER_TIME = 8000
+
+COWARDICE_FACE_FADE_TIME = 5000
+
+COWARDICE_JUMPSCARE_DELAY = 3000
+
+cowardice_active = False
+
+cowardice_cause = None
+
+cowardice_start_time = 0
+
+cowardice_enter_time = 0
+
+# ============================================================
+# FLUX STATE
+# ============================================================
+
+enemy_active = False
+enemy_position = None
+
+flux_timer_start = 0
+flux_active_start = 0
+
+flux_departure_time = 0
+
+spawn_flicker_start = 0
+spawn_flicker_active = False
+
+LOCKER_INTERACTION_DISTANCE = 1.35
+
+current_locker = None
+is_hiding = False
+
+flux_has_appeared = False
+flux_encounter_finished = False
+
+# ============================================================
+# screen shake state
+# ============================================================
+
+shake_offset_x = 0
+shake_offset_y = 0
+last_shake_update = 0
+
+# ============================================================
 # ENEMY SETTINGS - temporarily commented out to focus on map
 # ============================================================
 #
@@ -172,7 +254,7 @@ map_one = [
     [2, 2, 0, 0, 0, 1, 1, 0, 2, 2, 0, 2],
     [2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2],
     [2, 0, 2, 0, 0, 1, 1, 0, 0, 2, 0, 2],
-    [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
+    [2, 0, 2, 2, 0, 0, 0, 0, 7, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 5, 5, 0, 3, 0, 0, 2],
@@ -190,7 +272,7 @@ map_two = [
     [2, 0, 2, 2, 0, 0, 0, 0, 2, 0, 0, 2],
     [2, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 2],
     [2, 2, 0, 0, 0, 1, 1, 0, 2, 2, 0, 2],
-    [2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 0, 1, 1, 0, 7, 0, 0, 2],
     [2, 0, 2, 0, 0, 1, 1, 0, 0, 2, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
@@ -211,7 +293,7 @@ map_three = [
     [2, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 2],
     [2, 2, 0, 0, 0, 1, 1, 0, 2, 2, 0, 2],
     [2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2],
-    [2, 0, 2, 0, 0, 1, 1, 0, 0, 2, 0, 2],
+    [2, 0, 2, 0, 0, 1, 1, 7, 0, 2, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
@@ -229,7 +311,7 @@ map_four = [
     [2, 0, 0, 0, 0, 6, 6, 0, 2, 0, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 2, 0, 0, 2],
     [2, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 2],
-    [2, 2, 0, 0, 0, 1, 1, 0, 2, 2, 0, 2],
+    [2, 2, 0, 0, 0, 1, 1, 7, 2, 2, 0, 2],
     [2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2],
     [2, 0, 2, 0, 0, 1, 1, 0, 0, 2, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
@@ -250,7 +332,7 @@ map_five = [
     [2, 0, 2, 2, 0, 0, 0, 0, 2, 0, 0, 2],
     [2, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 2],
     [2, 2, 0, 0, 0, 1, 1, 0, 2, 2, 0, 2],
-    [2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 0, 1, 1, 7, 0, 0, 0, 2],
     [2, 0, 2, 0, 0, 1, 1, 0, 0, 2, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
@@ -271,7 +353,7 @@ map_six = [
     [2, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 2],
     [2, 2, 0, 0, 0, 1, 1, 0, 2, 2, 0, 2],
     [2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2],
-    [2, 0, 2, 0, 0, 1, 1, 0, 0, 2, 0, 2],
+    [2, 0, 2, 0, 0, 1, 1, 7, 0, 2, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
@@ -289,7 +371,7 @@ map_seven = [
     [2, 0, 0, 0, 0, 6, 6, 0, 2, 0, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 2, 0, 0, 2],
     [2, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 2],
-    [2, 2, 0, 0, 0, 1, 1, 0, 2, 2, 0, 2],
+    [2, 2, 0, 0, 0, 1, 1, 7, 2, 2, 0, 2],
     [2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2],
     [2, 0, 2, 0, 0, 1, 1, 0, 0, 2, 0, 2],
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
@@ -355,6 +437,7 @@ tile_images = {
     4: load_image("floor.png"),
     5: load_image("doorshadow.png"),
     6: load_image("doorshadow.png"),
+    7: load_image('machine.png')
 }
 
 # ============================================================
@@ -366,44 +449,22 @@ wall_texture = load_image("grass.png")
 roof_texture = load_image("water.png")
 door_texture = load_image("enemy.png")
 
-# ============================================================
-# FLOOR IMAGES
-#removed as this is for isometric functions
-# ============================================================
-#
-###floor images are resized to the size of one isometric tile
-#
-#floor_images = {}
-#
-#for tile_id in (0, 1, 5, 6):
-#
-#    floor_images[tile_id] = pygame.transform.smoothscale(
-#        tile_images[tile_id],
-#        (TILE_WIDTH, TILE_HEIGHT)
-#    )
-#
+try:
+    
+    locker_texture = load_image(
+        "locker.png"
+    )
 
+except FileNotFoundError:
 
-# ============================================================
-# PLAYER IMAGE
-# ============================================================
+    locker_texture = door_texture
+
 
 player_image = load_image(
     'Player.png'
 )
 
-# ============================================================
-# ENEMY IMAGES
-#commented out for now
-# ============================================================
-#
-## Enemy images are kept separate from normal map objects, this allows enemies to move independently around the map.
-#
-#enemy_image = load_image(
-#    'player.png' #an enemy image will be added, but for the meantime the player image will be a placeholder
-#)
-#
-#
+
 # ============================================================
 # MAP / PLAYER INTERACTIONS
 # ============================================================
@@ -434,6 +495,24 @@ player_y = spawn_y + 0.5
 #0.5 was chosen as it allows smaller movements than 1, making it feel like like a grid
 
 player_angle = PLAYER_START_ANGLE #this is useless in practicality, but if I mispell one, this will fix it
+
+
+# ============================================================
+# Cowardice reset
+# ============================================================
+
+def reset_cowardice():
+
+    global cowardice_active
+    global cowardice_cause
+    global cowardice_start_time
+    global locker_enter_time
+
+    cowardice_active = False
+    cowardice_cause = None
+
+    cowardice_start_time = 0
+    locker_enter_time = 0
 
 # ============================================================
 # MAP ROOM PROGRESSION
@@ -520,127 +599,6 @@ def move_to_next_map():
 
     player_angle = PLAYER_START_ANGLE
 
-
-
-    # Start at the entrance
-
-#    player_pos = list(
-#        find_tile(5, current_map)
-#    )
-#removed the above code as it tries to make the player spawn too precise for the amount of freedom of movement I prefer
-
-        
-
-## ============================================================
-## ISOMETRIC CONVERSION
-#removed because im changing from isometric conversion to faux 3D
-## ============================================================
-#
-###grid into isometric conversion
-#
-#def grid_to_screen(x, y):
-#
-#    display_x = MAP_ORIGIN_X + (x - y) * (TILE_WIDTH // 2)
-#    display_y = MAP_ORIGIN_Y + (x + y) * (TILE_HEIGHT // 2)
-#
-#    return display_x, display_y
-#
-#
-# ============================================================
-# DIAMOND POINTS
-# ============================================================
-#
-###diamond point
-#
-#def get_diamond_points(center_x, center_y):
-#
-#    half_width = TILE_WIDTH // 2
-#    half_height = TILE_HEIGHT // 2
-#
-#    return (
-#        (center_x, center_y - half_height),  # Top
-#        (center_x + half_width, center_y),   # Right
-#        (center_x, center_y + half_height),  # Bottom
-#        (center_x - half_width, center_y)    # Left
-#    )
-#
-#
-## ============================================================
-## DRAW FLOOR TILE
-## ============================================================
-#
-###draw floor tile
-#
-#def draw_floor_tile(x, y, image):
-#
-#    center_x, center_y = grid_to_screen(x, y)
-#
-#    tile_surface = pygame.Surface(
-#        (TILE_WIDTH, TILE_HEIGHT),
-#        pygame.SRCALPHA
-#    )
-#
-#    tile_surface.blit(
-#        image,
-#        (0, 0)
-#    )
-#
-#    mask = pygame.Surface(
-#        (TILE_WIDTH, TILE_HEIGHT),
-#        pygame.SRCALPHA
-#    )
-#
-#    mask_points = (
-#        (TILE_WIDTH // 2, 0),  # Top
-#        (TILE_WIDTH, TILE_HEIGHT // 2),  # Right
-#        (TILE_WIDTH // 2, TILE_HEIGHT),  # Bottom
-#        (0, TILE_HEIGHT // 2)  # Left
-#    )
-#
-#    pygame.draw.polygon(
-#        mask,
-#        (255, 255, 255),
-#        mask_points
-#    )
-#
-#    tile_surface.blit(
-#        mask,
-#        (0, 0),
-#        special_flags=pygame.BLEND_RGBA_MULT
-#    )
-#
-#    screen.blit(
-#        tile_surface,
-#        (
-#            center_x - TILE_WIDTH // 2,
-#            center_y - TILE_HEIGHT // 2
-#        )
-#    )
-#
-#
-## ============================================================
-## FAILSAFE FLOOR
-## ============================================================
-#
-###in case of glitching- extra floor
-#
-#def draw_failsafe_floor(x, y):
-#
-#    center_x, center_y = grid_to_screen(x, y)
-#
-#    pygame.draw.polygon(
-#        screen,
-#        (100, 100, 100),
-#        get_diamond_points(center_x, center_y)
-#    )
-#
-#    pygame.draw.polygon(
-#        screen,
-#        (0, 0, 0),
-#        get_diamond_points(center_x, center_y),
-#        1
-#    )
-#
 # ============================================================
 # OBJECT SETTINGS
 # ============================================================
@@ -652,85 +610,18 @@ OBJECT_PROPERTIES = {
         'blocks_movement': True,
         'blocks_vision': True
     },
-    3: {  # Machine
+
+    3: {  # Machine,
         'blocks_movement': True,
         'blocks_vision': False
-    }
-}
+    },
 
-## ============================================================
-## UPRIGHT OBJECTS
-#deleting upright objects as 
-## ============================================================
-#
-###Add extra details, upright objects
-#
-#def draw_object(
-#    x,
-#    y,
-#    image,
-#    height=OBJECT_HEIGHT
-#):
-#
-#    center_x, center_y = grid_to_screen(x, y)
-#
-#    image_width = image.get_width()
-#    image_height = image.get_height()
-#
-#
-#    ##keep original proportions of the image, but also allow for height to be added to the image, so it can be seen as upright
-#
-#    scale = min(
-#        TILE_WIDTH / image_width,
-#        height / image_height
-#    )
-#
-#    new_width = max(
-#        1,
-#        int(image_width * scale)
-#    )
-#
-#    new_height = max(
-#        1,
-#        int(image_height * scale)
-#    )
-#
-#    scaled_image = pygame.transform.smoothscale(
-#        image,
-#        (
-#            new_width,
-#            new_height
-#        )
-#    )
-#
-#
-#    #shadow effect for the object, so it looks like it is standing upright
-#
-#    shadow_rect = pygame.Rect(
-#        0,
-#        0,
-#        TILE_WIDTH // 2,
-#        TILE_HEIGHT // 4
-#    )
-#
-#    shadow_rect.center = (
-#        center_x,
-#        center_y + 2
-#    )
-#
-#    pygame.draw.ellipse(
-#        screen,
-#        (20, 20, 20),
-#        shadow_rect
-#    )
-#
-#    screen.blit(
-#        scaled_image,
-#        (
-#            center_x - new_width // 2,
-#            center_y - new_height
-#        )
-#    )
+    7: {
+        'blocks_movement': True,
+        'blocks_vision': True
+    }
+
+}
 
 # ============================================================
 # FAUX 3D RAYCASTING
@@ -756,7 +647,7 @@ def is_wall(x, y):
     tile = get_tile(x, y)
 
     #block movement and vision
-    return tile in (TILE_DEBRIS, TILE_MACHINE)
+    return tile in (TILE_DEBRIS, TILE_MACHINE, TILE_EXIT)
 
 def player_can_move_to(x, y):
     radius = PLAYER_RADIUS
@@ -883,125 +774,6 @@ def cast_ray(ray_angle):
 def draw_world():
 
     global wall_depth_buffer
-
-#largely removed as this is a draw function, not using the assets I want
-    ## Sky
-    #pygame.draw.rect(
-    #    screen,
-    #    (55, 75, 105),
-    #    (0, 0, SCREEN_WIDTH, GAME_HEIGHT // 2)
-    #)
-#
-    ## Floor
-    #pygame.draw.rect(
-    #    screen,
-    #    (45, 45, 45),
-    #    (
-    #        0,
-    #        GAME_HEIGHT // 2,
-    #        SCREEN_WIDTH,
-    #        GAME_HEIGHT // 2
-    #    )
-    #)
-#
-    #wall_depth_buffer = [
-    #    MAX_DEPTH
-    #    for _ in range(NUM_RAYS)
-    #]
-#
-    #for ray in range(NUM_RAYS):
-#
-    #    camera_x = (
-    #        2 * ray / NUM_RAYS
-    #    ) - 1
-#
-    #    ray_angle = (
-    #        player_angle
-    #        + camera_x * (FOV / 2)
-    #    )
-#
-    #    distance, side = cast_ray(ray_angle)
-#
-    #    wall_depth_buffer[ray] = distance
-#
-    #    wall_height = int(
-    #        GAME_HEIGHT / distance
-    #    )
-#
-    #    wall_top = (
-    #        GAME_HEIGHT // 2
-    #        - wall_height // 2
-    #    )
-#
-    #    wall_bottom = (
-    #        GAME_HEIGHT // 2
-    #        + wall_height // 2
-    #    )
-#
-    #    # Match the reference's distance shading.
-    #    brightness = max(
-    #        35,
-    #        min(
-    #            210,
-    #            int(220 / (1 + distance * 0.08))
-    #        )
-    #    )
-#
-    #    # One side of a wall is slightly darker.
-    #    if side == 1:
-    #        brightness = int(
-    #            brightness * 0.75
-    #        )
-#
-    #    # Keep your different object types visually distinct.
-    #    hit_x = int(
-    #        player_x + math.cos(ray_angle) * distance
-    #    )
-    #    hit_y = int(
-    #        player_y + math.sin(ray_angle) * distance
-    #    )
-#
-    #    tile = get_tile(hit_x, hit_y)
-#
-    #    if tile == TILE_DEBRIS:
-    #        wall_colour = (
-    #            int(brightness * 0.75),
-    #            int(brightness * 0.65),
-    #            int(brightness * 0.60)
-    #        )
-#
-    #    elif tile == TILE_MACHINE:
-    #        wall_colour = (
-    #            int(brightness * 0.60),
-    #            int(brightness * 0.60),
-    #            int(brightness * 0.85)
-    #        )
-#
-    #    else:
-    #        wall_colour = (
-    #            brightness,
-    #            brightness,
-    #            brightness
-    #        )
-#
-    #    x = int(
-    #        ray * SCREEN_WIDTH / NUM_RAYS
-    #    )
-#
-    #    width = math.ceil(
-    #        SCREEN_WIDTH / NUM_RAYS
-    #    ) + 1
-#
-    #    pygame.draw.rect(
-    #        screen,
-    #        wall_colour,
-    #        (
-    #            x,
-    #            wall_top,
-    #            width,
-    #            wall_bottom - wall_top
-    #        )
-    #    )
 
 # ========================================================
 # DRAW ROOF
@@ -1634,6 +1406,153 @@ def exitable():
 def next_room():
     if exitable():
         move_to_next_map()
+
+# ============================================================
+# FLUX timer helpers
+# ============================================================
+
+def get_flux_cooldown():
+
+    if not flux_has_appeared:
+
+        return 0
+
+    if flux_encounter_finished:
+
+        return 0
+
+    now = pygame.time.get_ticks()
+
+    elapsed = (
+        now - flux_timer_start
+    )
+
+    remaining = (
+
+        FLUX_COOLDOWN
+        - elapsed
+    )
+
+    return max(
+        0,
+        remaining
+    )
+
+    def flux_is_in_active_phase():
+
+        if not enemy_active:
+
+            return False
+
+        if flux_encounter_finished:
+
+            return False
+
+        if flux_active_start == 0:
+
+            return False
+
+        now = pygame.time.get_ticks()
+
+        active_elapsed = (
+
+            now
+            - flux_active_start
+        )
+
+        return (
+            active_elapsed >= 0
+            and
+            active_elapsed < FLUX_ACTIVE_DURATION
+        )
+
+        def flux_active_elapsed():
+
+            if not flux_is_in_active_phase():
+
+                return 0
+
+            now = pygame.time.get_ticks()
+
+            return (
+
+                now
+                - flux_active_start
+            )
+
+# ============================================================
+# cowardice exit trigger
+# ============================================================
+
+def cowardice_exit_trigger():
+
+    global cowardice_active
+    global cowardice_cause
+    global cowardice_start_time
+    global player_locked
+
+    if not flux_has_appeared:
+        return False
+
+    if flux_encounter_finished:
+
+        return False
+
+        if flux_is_in_active_phase():
+
+            return False
+
+        if(
+            cowardice_active
+            and
+            cowardice_cause == 'exit'
+        ):
+
+            return True
+
+        cowardice_active = True
+        cowardice_cause = 'exit'
+
+        cowardice_start_time = (
+            pygame.get.get_ticks()
+        )
+
+        player_locked = True
+
+        print(
+            'Cowardice: escape attempt'
+        )
+
+        trigger_jumpscare(
+            'cowardice'
+        )
+
+        return True
+
+# ============================================================
+# Next Room
+# ============================================================
+
+def next_room():
+
+    if not exitable():
+
+        return
+
+    if flux_is_in_active_phase():
+
+        trigger_jumpscare(
+            'flux'
+        )
+
+        return
+
+    if cowardice_exit_trigger():
+
+        return
+
+    move_to_next_map()
+
 # ============================================================
 # PLAYER MOVEMENT
 #uses player_pos which no longer exists, so im fixing this section aswell
@@ -1705,23 +1624,237 @@ def update_player_movement(dt):
 
 def update_enemy():
 
+    return
+
+# ============================================================
+# LOCKER SYSTEM
+# ============================================================
+
+def find_nearby_locker():
+
+    best = None
+
+    best_distance = (
+        LOCKER_INTERACTION_DISTANCE
+    )
+
+    for y, row in enumerate(current_map):
+
+        for x, tile in enumerate(row):
+
+            if tile != TILE_LOCKER:
+
+                continue
+        
+        distance = math.hypot(
+
+            player_x - (x + 0.5)
+            player_y - (y + 0.5)
+        )
+
+    return best
+
+def enter_locker(locker):
+
+    global current_locker
+    global is_hiding
+    global player_x
+    global player_y
+    global player_angle
+    global locker_enter_time
+ 
+    if locker is None:
+ 
+        return
+ 
+    current_locker = locker
+ 
+    is_hiding = True
+ 
+    locker_enter_time = (
+        pygame.time.get_ticks()
+    )
+
+    if (
+        cowardice_active
+        and
+        cowardice_cause == 'exit'
+    ):
+
+    reset_cowardice()
+
+    print('Cowardice: escape attempt abandoned')
+
+    elif cowardice_cause == 'locker':
+
+        reset_cowardice()
+
+    player_y = (
+        locker[1] + 0.5
+    )
+ 
+    player_angle = (
+        player_angle + math.pi
+    )
+ 
+    player_angle %= (
+        math.pi * 2
+    )
+ 
+ 
+def leave_locker():
+ 
+    global current_locker
+    global is_hiding
+    global player_x
+    global player_y
+ 
+    if current_locker is not None:
+ 
+        lx, ly = current_locker
+ 
+        possible_positions = (
+ 
+            (
+                lx + 0.5,
+                ly - 0.65
+            ),
+ 
+            (
+                lx + 0.5,
+                ly + 1.65
+            ),
+ 
+            (
+                lx - 0.65,
+                ly + 0.5
+            ),
+ 
+            (
+                lx + 1.65,
+                ly + 0.5
+            )
+ 
+        )
+ 
+        for px, py in possible_positions:
+ 
+            if player_can_move_to(
+                px,
+                py
+            ):
+ 
+                player_x = px
+                player_y = py
+ 
+                break
+ 
+    is_hiding = False
+    current_locker = None
+
+    if (
+        cowardice_active
+        and
+        cowardice_cause == "locker"
+ 
+    ):
+ 
+        reset_cowardice()
+ 
+        print(
+            "COWARDICE: manifestation cancelled."
+        )
+
+# ============================================================
+# set flux
+# ============================================================
+
+def setup_enemy_2():
+
+    global enemy_active
     global enemy_position
-    global enemy_last_move_time
 
-    if not enemy_active:
+    global flux_timer_start
+    global flux_active_start
+    global flux_departure_time
+
+    global spawn_flicker_start
+    global spawn_flicker_active
+
+    global flux_has_appeared
+    global flux_encounter_finished
+ 
+    global shake_offset_x
+    global shake_offset_y
+    global last_shake_update
+
+    enemy_active = False
+    enemy_position = None
+
+    flux_timer_start = 0
+    flux_active_start = 0
+    flux_departure_time = 0
+
+    spawn_flicker_start = 0
+    spawn_flicker_active = False
+
+    flux_has_appeared = False
+    flux_encounter_finished = False
+
+    shake_offset_x = 0
+    shake_offset_y = 0
+    last_shake_update = 0
+
+    if room_number < ENEMY_2_FIRST_ROOM:
+
         return
 
-    if enemy_position is None:
+    if room_number == ENEMY_2_FIRST_ROOM:
+
+        should_spawn = True
+
+    else:
+
+        should_spawn = (
+
+            random.random()
+            < ENEMY_2_LATER_CHANCE
+        )
+
+    if not should_spawn:
+
         return
 
-    current_time = pygame.time.get_ticks()
+    entrance = find_tile(
+        TILE_ENTRANCE,
+        current_map
+    )
 
-    if current_time - enemy_last_move_time < ENEMY_MOVE_COOLDOWN:
+    if entrance is None
+
         return
 
-    enemy_last_move_time = current_time
+    enemy_position = entrance
 
-    #other stuff that should be added are pathfinding, chasing, line of sight, searching, or patrolling, depending on what gets added, this should thus be updated later
+    enemy_active = True
+
+    flux_has_appeared = True
+    flux_encounter_finished = False
+
+    now = pygame.time.get_ticks()
+
+    flux_timer_start = now
+
+    flux_active_start = 0
+
+    flux_departure_time = 0
+
+    spawn_flicker_start = now
+    spawn_flicker_active = True
+
+    print(f'Flux spawned in room {room_number}')
+
+
 
 # ============================================================
 # TILE EDITOR / INPUTS
