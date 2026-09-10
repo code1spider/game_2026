@@ -47,9 +47,21 @@ player_locked = False
 ENEMY_2_FIRST_ROOM = 20
 ENEMY_2_LATER_CHANCE = 0.05
 
+FLUX_CHANCE_STEP_ROOMS = 50
+FLUX_CHANCE_INCREASE = 0.025
+FLUX_MAX_CHANCE = 0.95
+
+TEST_ROOM_KEYS = {
+    pygame.K_f: 200,
+    pygame.K_g: 400,
+    pygame.K_h: 600,
+    pygame.K_j: 800,
+    pygame.K_k: 1000,
+}
+
 #time until active
 
-FLUX_COOLDOWN = 10000
+FLUX_COUNTDOWN = 10000
 
 #active duration
 FLUX_ACTIVE_DURATION = 2500
@@ -72,6 +84,18 @@ FLUX_MILD_SHAKE_AMOUNT = 3
 FLUX_MAJOR_SHAKE_AMOUNT = 8
 
 SHAKE_UPDATE_INTERVAL = 35
+
+# ============================================================
+# room progression
+# ============================================================
+
+FLUX_ACTIVE_ROOM_STEP = 100
+FLUX_ACTIVE_BONUS_PER_STEP = 250
+FLUX_ACTIVE_MAX_BONUS = 1500
+
+COWARDICE_ROOM_STEP = 100
+COWARDICE_REDUCTION_PER_STEP = 500
+COWARDICE_MIN_TIME = 4500
 
 # ============================================================
 # enemy 3
@@ -122,6 +146,8 @@ shake_offset_x = 0
 shake_offset_y = 0
 last_shake_update = 0
 
+show_enemy_info = False
+
 # ============================================================
 # ENEMY SETTINGS - temporarily commented out to focus on map
 # ============================================================
@@ -149,6 +175,7 @@ TILE_MACHINE = 3
 TILE_FLOOR_ALT = 4
 TILE_ENTRANCE = 5
 TILE_EXIT = 6
+TILE_LOCKER = 7
 
 # ============================================================
 # MAP / TILE SETTINGS
@@ -404,7 +431,6 @@ maps = [
 def load_image(name, dimensions=None):
 
     try:
-        path = os.path.join("assets", name)
 
         img_surface = pygame.image.load(path).convert_alpha()
 
@@ -1024,6 +1050,12 @@ def draw_world():
         if tile == TILE_EXIT:
         
             current_wall_texture = door_texture
+
+        elif tile == TILE_LOCKER:
+
+            current_wall_texture = (
+                locker_texture
+            )
     
         else:
         
@@ -1123,254 +1155,6 @@ def draw_world():
             )
         )
 
-
-# ============================================================
-# DRAW FAUX 3D MAP
-#this will be used to draw the map, different than just the tiles, this will actually be how it looks, the draw function will be the easiest way to do this
-#removed, replaced with draw_world
-# ============================================================
-#
-#def draw_faux_map():
-#    #sky
-#    pygame.draw.rect(
-#        screen, 
-#        (100, 15, 65),
-#        (0, 0, GAME_WIDTH, GAME_HEIGHT // 2)
-#    )
-#
-#    #floor
-#    pygame.draw.rect(
-#        screen, 
-#        (55, 60, 140),
-#        (
-#            0,
-#            GAME_HEIGHT // 2,
-#            GAME_WIDTH,
-#            GAME_HEIGHT // 2
-#        )
-#    )
-#
-#    column_width = GAME_WIDTH / RAY_COUNT
-#
-#    for ray_number in range(RAY_COUNT):
-#
-#        #position of the ray across the FOV
-#        camera_x = ray_number / RAY_COUNT
-#
-#        ray_angle = (
-#            player_angle
-#            - FOV / 2
-#            + camera_x * FOV
-#        )
-#
-#        distance, hit_x, hit_y = cast_ray(ray_angle)
-#
-#        #correct distortion
-#        corrected_distance = max(
-#            distance *
-#            math.cos(ray_angle - player_angle)
-#        )
-#
-#        corrected_distance = max(
-#            corrected_distance,
-#            0.001
-#        )
-#
-#        #height of walls
-#        wall_height = (
-#            GAME_HEIGHT /
-#            corrected_distance
-#        )
-#
-#        wall_height = min(
-#            wall_height,
-#            GAME_HEIGHT * 2
-#        )
-#
-#        wall_top = (
-#            GAME_HEIGHT // 2
-#            - wall_height // 2
-#        )
-#
-#        wall_color = (100, 100, 100)
-#
-#        if hit_x is not None and hit_y is not None:
-#
-#            tile = current_map[hit_y][hit_x]
-#
-#            if tile == TILE_DEBRIS:
-#                wall_color = (110, 90, 80)
-#
-#            elif tile == TILE_MACHINE:
-#                wall_color = (80, 80, 120)
-#
-#        pygame.draw.rect(
-#            screen,
-#            wall_color,
-#            (
-#                int(ray_number * column_width),
-#                int(wall_top),
-#                int(column_width) + 1,
-#                int(wall_bottom - wall_top)
-#                )
-#        )
-#
-# ============================================================
-# PLAYER DRAWING
-#removed- this code has already been fufilled by the FOV
-# ============================================================
-
-##draw player
-#
-#def draw_player():
-#
-#    x, y = player_pos
-#
-#    center_x, center_y = grid_to_screen(x, y)
-#
-#    image_width = player_image.get_width()
-#    image_height = player_image.get_height()
-#
-#
-#    #keep proportions of the player image, but also allow for height to be added to the image, so it can be seen as upright
-#
-#    scale = min(
-#        TILE_WIDTH / image_width,
-#        PLAYER_HEIGHT / image_height
-#    )
-#
-#    new_width = max(
-#        1,
-#        int(image_width * scale)
-#    )
-#
-#    new_height = max(
-#        1,
-#        int(image_height * scale)
-#    )
-#
-#    scaled_player_image = pygame.transform.smoothscale(
-#        player_image,
-#        (
-#            new_width,
-#            new_height
-#        )
-#    )
-#
-#
-#    ##player shadow effect, so it looks like it is standing upright
-#
-#    shadow_rect = pygame.Rect(
-#        0,
-#        0,
-#        TILE_WIDTH // 2,
-#        TILE_HEIGHT // 4
-#    )
-#
-#    shadow_rect.center = (
-#        center_x,
-#        center_y + 2
-#    )
-#
-#    pygame.draw.ellipse(
-#        screen,
-#        (20, 20, 20),
-#        shadow_rect
-#    )
-#
-#    screen.blit(
-#        scaled_player_image,
-#        (
-#            center_x - new_width // 2,
-#            center_y - new_height
-#        )
-#    )
-#
-#
-# ============================================================
-# DRAW MAP
-#also removed, replaced with draw_world
-# ============================================================
-#
-#def draw_map():
-#
-#    for y in range(MAP_HEIGHT):
-#
-#        for x in range(MAP_WIDTH):
-#
-#            tile = current_map[y][x]
-#
-#            if tile in floor_images:
-#
-#                draw_floor_tile(
-#                    x,
-#                    y,
-#                    floor_images[tile]
-#                )
-#
-#            else:
-#
-#                draw_failsafe_floor(
-#                    x,
-#                    y
-#                )
-#
-#
-#    objects = []
-#
-#    for y in range(MAP_HEIGHT):
-#
-#        for x in range(MAP_WIDTH):
-#
-#            tile = current_map[y][x]
-#
-#            if tile in (2, 3):
-#
-#                objects.append(
-#                    (
-#                        x + y,
-#                        x,
-#                        y,
-#                        tile_images[tile]
-#                    )
-#                )
-#
-#
-#
-#    objects.sort(
-#        key=lambda item: item[0]
-#    )
-#
-#
-#    for depth, x, y, image in objects:
-#
-#        draw_object(
-#            x,
-#            y,
-#            image
-#        )
-#
-#
-## ============================================================
-## WALKABILITY
-#removed to make 3D collision instead as this code was for isometric functions
-## ============================================================
-#
-#def is_walkable(x, y):
-#
-#    if not (0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT):
-#        return False
-#
-#    tile = current_map[y][x]
-#
-#    #check whether this object blocks movement
-#    if tile in OBJECT_PROPERTIES:
-#
-#        if OBJECT_PROPERTIES[tile]["blocks_movement"]:
-#            return False
-#
-#    return True
-
 # ============================================================
 # CHECK ADJACENCY
 #this will be fixed as player_pos no longer exists, so I will fix this section
@@ -1408,10 +1192,163 @@ def next_room():
         move_to_next_map()
 
 # ============================================================
+# PROGRESSION HELPERS
+# ============================================================
+
+def get_flux_spawn_chance():
+
+    if room_number == ENEMY_2_FIRST_ROOM:
+        return 1.0
+
+    if room_number < ENEMY_2_FIRST_ROOM:
+        return 0.0
+
+    checkpoints = room_number // FLUX_CHANCE_STEP_ROOMS
+
+    chance = (
+        ENEMY_2_LATER_CHANCE
+        + checkpoints * FLUX_CHANCE_INCREASE
+    )
+
+    return min(
+        chance,
+        FLUX_MAX_CHANCE
+    )
+
+def get_next_flux_checkpoint():
+
+    if room_number < FLUX_CHANCE_STEP_ROOMS:
+        return FLUX_CHANCE_STEP_ROOMS
+
+    return (
+        room_number // FLUX_CHANCE_STEP_ROOMS + 1
+    ) * FLUX_CHANCE_STEP_ROOMS
+
+def reset_room_state():
+
+    global enemy_active
+    global enemy_position
+    global flux_timer_start
+    global flux_active_start
+    global flux_departure_time
+    global spawn_flicker_start
+    global spawn_flicker_active
+    global flux_has_appeared
+    global flux_encounter_finished
+    global shake_offset_x
+    global shake_offset_y
+    global last_shake_update
+    global is_hiding
+    global current_locker
+    global locker_enter_time
+    global game_over
+    global jumpscare_active
+    global player_locked
+    global death_cause
+
+    enemy_active = False
+    enemy_position = None
+    flux_timer_start = 0
+    flux_active_start = 0
+    flux_departure_time = 0
+    spawn_flicker_start = 0
+    spawn_flicker_active = False
+    flux_has_appeared = False
+    flux_encounter_finished = False
+    shake_offset_x = 0
+    shake_offset_y = 0
+    last_shake_update = 0
+    is_hiding = False
+    current_locker = None
+    locker_enter_time = 0
+    reset_cowardice()
+    game_over = False
+    jumpscare_active = False
+    player_locked = False
+    death_cause = None
+
+def set_test_room(target_room):
+
+    global room_number
+    global current_map_number
+    global current_map
+    global player_x
+    global player_y
+    global player_angle
+
+    room_number = max(1, min(1000, target_room))
+
+    current_map = load_map(
+        current_map_number
+    )
+
+    spawn = find_tile(
+        TILE_ENTRANCE,
+        current_map
+    )
+
+    if spawn is not None:
+        player_x = spawn[0] + 0.5
+        player_y = spawn[1] + 0.5
+
+    player_angle = PLAYER_START_ANGLE
+    reset_room_state()
+
+    print(
+        f"TEST: Set to Room {room_number}. "
+        f"Flux chance: {get_flux_spawn_chance() * 100:.1f}%"
+    )
+
+
+def get_flux_active_duration():
+
+    steps = max(
+        0,
+        (room_number - ENEMY_2_FIRST_ROOM) // FLUX_ACTIVE_ROOM_STEP
+    )
+
+    bonus = min(
+        steps * FLUX_ACTIVE_BONUS_PER_STEP,
+        FLUX_ACTIVE_MAX_BONUS
+    )
+
+    return FLUX_ACTIVE_DURATION + bonus
+
+def get_cowardice_locker_time():
+
+    steps = max(
+        0,
+        (room_number - ENEMY_2_FIRST_ROOM) // COWARDICE_ROOM_STEP
+    )
+
+    reduction = steps * COWARDICE_REDUCTION_PER_STEP
+
+    return max(
+        COWARDICE_MIN_TIME,
+        COWARDICE_LOCKER_TIME - reduction
+    )
+
+def flux_leaving_room_is_safe():
+
+    if game_over:
+        return False
+
+    if not flux_has_appeared:
+        return True
+
+    if flux_is_in_active_phase():
+        return False
+
+    if not flux_encounter_finished:
+        return False
+
+    return not cowardice_active
+
+# ============================================================
 # FLUX timer helpers
 # ============================================================
 
-def get_flux_cooldown():
+def get_FLUX_COUNTDOWN():
 
     if not flux_has_appeared:
 
@@ -1429,7 +1366,7 @@ def get_flux_cooldown():
 
     remaining = (
 
-        FLUX_COOLDOWN
+        FLUX_COUNTDOWN
         - elapsed
     )
 
@@ -1648,7 +1585,7 @@ def find_nearby_locker():
         
         distance = math.hypot(
 
-            player_x - (x + 0.5)
+            player_x - (x + 0.5),
             player_y - (y + 0.5)
         )
 
@@ -1681,13 +1618,17 @@ def enter_locker(locker):
         cowardice_cause == 'exit'
     ):
 
-    reset_cowardice()
+        reset_cowardice()
 
-    print('Cowardice: escape attempt abandoned')
+        print('Cowardice: escape attempt abandoned')
 
     elif cowardice_cause == 'locker':
 
         reset_cowardice()
+
+    player_x = (
+        locker[0] + 0.5
+    )
 
     player_y = (
         locker[1] + 0.5
@@ -1830,7 +1771,7 @@ def setup_enemy_2():
         current_map
     )
 
-    if entrance is None
+    if entrance is None:
 
         return
 
@@ -1898,6 +1839,27 @@ def flux_can_kill_player():
     return True
 
 # ============================================================
+# flux kill
+# ============================================================
+
+def check_flux_kill():
+
+    global is_hiding
+    global player_locked
+
+    if flux_can_kill_player():
+
+        player_locked = True
+
+        trigger_jumpscare(
+            'flux'
+        )
+
+        print(
+            'Flux killed the player'
+        )
+
+# ============================================================
 # update flux
 # ============================================================
 
@@ -1910,7 +1872,7 @@ def update_enemy_2():
     global flux_encounter_finished
     global flux_department_time
 
-    if not flux_has_appeared
+    if not flux_has_appeared:
 
         return
 
@@ -1924,15 +1886,15 @@ def update_enemy_2():
 # lights flicker
 # ============================================================
 
-if spawn_flicker_active:
-
-    if (
-
-        now - spawn_flicker_start
-        >= SPAWN_FLICKER_DURATION
-    ):
-
-    spawn_flicker_active = False
+    if spawn_flicker_active:
+    
+        if (
+        
+            now - spawn_flicker_start
+            >= SPAWN_FLICKER_DURATION
+        ):
+    
+            spawn_flicker_active = False
 
 # ============================================================
 # grace period
@@ -2117,12 +2079,12 @@ def get_flux_shake():
     global shake_offset_y
     global last_shake_update
 
-    if is_hiding:
-
-        shake_offset_x = 0
-        shake_offset_y = 0
-
-        return 0, 0
+#    if is_hiding:
+#
+#        shake_offset_x = 0
+#        shake_offset_y = 0
+#
+#        return 0, 0
 
     if not flux_has_appeared:
 
@@ -2133,7 +2095,7 @@ def get_flux_shake():
 
     now = pygame.time.get_ticks()
 
-    amount 0
+    amount = 0
 
     # ========================================================
     # BEFORE ACTIVE
@@ -2220,12 +2182,1418 @@ def get_flux_shake():
 
     #random shake
 
+# ============================================================
+# random shake
+# ============================================================
+
     if (
         now - last_shake_update
-        >= SHAKE_UPDATE_INTERVAL
+        >- SHAKE_UPDATE_INTERVAL
+        or
+        (shake_offset_x == 0 and shake_offset_y == 0)
     ):
 
+        last_shake_update = now
+
+        shake_offset_x = random.randint(
+            -amount,
+            amount
+        )
+
+        shake_offset_y = random.randint(
+            -amount,
+            amount
+        )
+
+    return (
+        shake_offset_x,
+        shake_offset_y
+    )
+
+# ============================================================
+# DRAW FLUX SCREEN SHAKE
+# ============================================================
+
+def draw_enemy_screen_shake():
+
+    shake_x, shake_y = get_flux_shake()
+
+    if shake_x == 0 and shake_y == 0:
+        return
+
+    ## Only shake the game world.
+    ## The UI at the bottom stays completely stable, this is in case I use this again
+    game_area = screen.subsurface(
+        pygame.Rect(
+            0,
+            0,
+            SCREEN_WIDTH,
+            GAME_HEIGHT
+        )
+    ).copy()
+
+    screen.fill(
+        (0, 0, 0),
+        pygame.Rect(
+            0,
+            0,
+            SCREEN_WIDTH,
+            GAME_HEIGHT
+        )
+    )
+
+    screen.blit(
+        game_area,
+        (shake_x, shake_y)
+    )
+
+# ============================================================
+# TILE EDITOR / INPUTS
+# ============================================================
+
+def draw_enemy_info():
+
+    if not show_enemy_info:
+        return
+
+    panel = pygame.Surface(
+        (SCREEN_WIDTH - 40, GAME_HEIGHT - 40),
+        pygame.SRCALPHA
+    )
+    panel.fill((10, 10, 10, 235))
+
+    title_font = pygame.font.Font(None, 34)
+    body_font = pygame.font.Font(None, 24)
     
+    lines = []
+
+    lines.append(f"ENEMY INFORMATION - ROOM {room_number}")
+    lines.append("")
+
+    # --------------------------------------------------------
+    # Enemy 2 / Flux
+    # --------------------------------------------------------
+    lines.append("ENEMY 2 - FLUX")
+    lines.append(
+        f"Spawn chance this room: {get_flux_spawn_chance() * 100:.1f}%"
+    )
+    if room_number < ENEMY_2_FIRST_ROOM:
+        lines.append("Next chance change: Room 50")
+    else:
+        next_checkpoint = get_next_flux_checkpoint()
+        next_chance = min(
+            ENEMY_2_LATER_CHANCE
+            + (next_checkpoint // FLUX_CHANCE_STEP_ROOMS) * FLUX_CHANCE_INCREASE,
+            FLUX_MAX_CHANCE
+        )
+        lines.append(
+            f"Next checkpoint: Room {next_checkpoint} "
+            f"({next_chance * 100:.1f}%)"
+        )
+    lines.append(
+        f"Active duration: {get_flux_active_duration() / 1000:.2f}s "
+        f"(base {FLUX_ACTIVE_DURATION / 1000:.2f}s)"
+    )
+
+    if not flux_has_appeared:
+        lines.append("Status: Not spawned")
+        lines.append("Time to hide: N/A")
+    elif flux_encounter_finished:
+        lines.append("Status: Encounter finished")
+        lines.append("Time to hide: Safe now")
+    elif flux_is_in_active_phase():
+        remaining = max(
+            0,
+            get_flux_active_duration() - flux_active_elapsed()
+        )
+        lines.append("Status: ACTIVE - LETHAL")
+        lines.append(
+            f"Time remaining before Flux leaves: {remaining / 1000:.2f}s"
+        )
+        lines.append("Time to hide: HIDE NOW (locker required)")
+    else:
+        remaining = get_flux_countdown()
+        lines.append("Status: Countdown")
+        lines.append(
+            f"Time until Flux is active: {remaining / 1000:.2f}s"
+        )
+        lines.append("Time to hide: Before countdown reaches 0")
+
+    lines.append(
+        "Leaving room safe: "
+        + ("YES" if flux_leaving_room_is_safe() else "NO")
+    )
+    lines.append(
+        "Hiding stops Flux shake: NO"
+    )
+
+    lines.append("")
+
+    # --------------------------------------------------------
+    # Enemy 3 / Cowardice
+    # --------------------------------------------------------
+    lines.append("ENEMY 3 - COWARDICE")
+    locker_time = get_cowardice_locker_time()
+    lines.append(
+        f"Locker time before Cowardice notices you: {locker_time / 1000:.2f}s"
+    )
+
+    if not cowardice_active:
+        if is_hiding and locker_enter_time > 0:
+            elapsed = pygame.time.get_ticks() - locker_enter_time
+            remaining = max(0, locker_time - elapsed)
+            lines.append(
+                f"Current hidden time: {elapsed / 1000:.2f}s"
+            )
+            lines.append(
+                f"Time until noticed: {remaining / 1000:.2f}s"
+            )
+        else:
+            lines.append("Status: Waiting")
+    else:
+        lines.append(
+            "Status: " + str(cowardice_cause).upper()
+        )
+
+    lines.append(
+        "Leaving locker cancels locker manifestation: YES"
+    )
+    lines.append(
+        "Leaving room safe: "
+        + ("YES" if flux_leaving_room_is_safe() else "NO")
+    )
+
+    lines.append("")
+    lines.append("P = hide/show this information")
+
+    screen.blit(panel, (20, 20))
+
+    y = 35
+    for index, line in enumerate(lines):
+        if index == 0:
+            surf = title_font.render(line, True, (255, 255, 255))
+            screen.blit(surf, (35, y))
+            y += 42
+        elif line in ("ENEMY 2 - FLUX", "ENEMY 3 - COWARDICE"):
+            surf = title_font.render(line, True, (255, 220, 80))
+            screen.blit(surf, (35, y))
+            y += 32
+        else:
+            surf = body_font.render(line, True, (235, 235, 235))
+            screen.blit(surf, (35, y))
+            y += 27
+
+# ============================================================
+# DRAW FLUX SPAWN FLICKER
+# ============================================================
+
+def draw_enemy_2_flicker():
+
+    if not spawn_flicker_active:
+
+        return
+
+    now = pygame.time.get_ticks()
+
+    elapsed = (
+
+        now
+        - spawn_flicker_start
+    )
+
+    if elapsed >= SPAWN_FLICKER_DURATION:
+
+        return
+
+    flicker = False
+
+    if 250 <= elapsed < 450:
+
+        flicker = True
+
+    elif 900 <= elapsed < 1100:
+
+        flicker = True
+
+    elif 1450 <= elapsed < 1650:
+
+        flicker = True
+
+    if not flicker:
+
+        return
+
+    overlay = pygame.Surface(
+
+        (
+            SCREEN_WIDTH,
+            GAME_HEIGHT
+        ),
+
+        pygame.SRCALPHA
+
+    )
+
+    overlay.fill(
+
+        (
+            0,
+            0,
+            0,
+            200
+        )
+
+    )
+
+    screen.blit(
+        overlay,
+        (0, 0)
+    )
+
+# ============================================================
+# COWARDICE FACE
+# ============================================================
+
+def draw_cowardice_face(alpha):
+
+    if alpha <= 0:
+
+        return
+
+    center_x = (
+        SCREEN_WIDTH // 2
+    )
+
+    center_y = (
+        GAME_HEIGHT // 2
+    )
+
+    face_surface = pygame.Surface(
+
+        (
+            SCREEN_WIDTH,
+            GAME_HEIGHT
+        ),
+
+        pygame.SRCALPHA
+
+    )
+
+    size_multiplier = (
+
+        0.65
+        +
+        alpha / 255 * 0.35
+
+    )
+
+    width = int(
+        390 * size_multiplier
+    )
+
+    height = int(
+        500 * size_multiplier
+    )
+
+    face_rect = pygame.Rect(
+
+        center_x - width // 2,
+        center_y - height // 2,
+        width,
+        height
+
+    )
+
+    pygame.draw.ellipse(
+
+        face_surface,
+
+        (
+            5,
+            5,
+            5,
+            alpha
+        ),
+
+        face_rect
+
+    )
+
+    eye_alpha = min(
+
+        255,
+        int(alpha * 1.2)
+
+    )
+
+    left_eye = pygame.Rect(
+
+        center_x - int(width * 0.30),
+        center_y - int(height * 0.18),
+        int(width * 0.18),
+        int(height * 0.13)
+
+    )
+
+    right_eye = pygame.Rect(
+
+        center_x + int(width * 0.12),
+        center_y - int(height * 0.18),
+        int(width * 0.18),
+        int(height * 0.13)
+
+    )
+
+    pygame.draw.ellipse(
+
+        face_surface,
+
+        (
+            120,
+            0,
+            0,
+            eye_alpha
+        ),
+
+        left_eye
+
+    )
+
+    pygame.draw.ellipse(
+
+        face_surface,
+
+        (
+            120,
+            0,
+            0,
+            eye_alpha
+        ),
+
+        right_eye
+
+    )
+
+    pupil_alpha = min(
+
+        255,
+        int(alpha * 1.5)
+
+    )
+
+    pygame.draw.ellipse(
+
+        face_surface,
+
+        (
+            0,
+            0,
+            0,
+            pupil_alpha
+        ),
+
+        (
+
+            center_x - int(width * 0.245),
+            center_y - int(height * 0.17),
+            int(width * 0.055),
+            int(height * 0.105)
+
+        )
+
+    )
+
+    pygame.draw.ellipse(
+
+        face_surface,
+
+        (
+            0,
+            0,
+            0,
+            pupil_alpha
+        ),
+
+        (
+
+            center_x + int(width * 0.165),
+            center_y - int(height * 0.17),
+            int(width * 0.055),
+            int(height * 0.105)
+
+        )
+
+    )
+
+    mouth_rect = pygame.Rect(
+
+        center_x - int(width * 0.28),
+        center_y + int(height * 0.08),
+        int(width * 0.56),
+        int(height * 0.25)
+
+    )
+
+    pygame.draw.ellipse(
+
+        face_surface,
+
+        (
+            50,
+            0,
+            0,
+            alpha
+        ),
+
+        mouth_rect
+
+    )
+
+    teeth_alpha = min(
+
+        255,
+        int(alpha * 1.1)
+
+    )
+
+    for i in range(8):
+
+        tooth_x = (
+
+            center_x
+            - int(width * 0.22)
+            + i * int(width * 0.062)
+
+        )
+
+        pygame.draw.polygon(
+
+            face_surface,
+
+            (
+                180,
+                180,
+                170,
+                teeth_alpha
+            ),
+
+            [
+
+                (
+                    tooth_x,
+                    center_y
+                    + int(height * 0.11)
+                ),
+
+                (
+                    tooth_x
+                    + int(width * 0.045),
+                    center_y
+                    + int(height * 0.11)
+                ),
+
+                (
+                    tooth_x
+                    + int(width * 0.022),
+                    center_y
+                    + int(height * 0.18)
+                )
+
+            ]
+
+        )
+
+    screen.blit(
+
+        face_surface,
+        (0, 0)
+
+    )
+
+
+# ============================================================
+# DRAW COWARDICE
+# ============================================================
+
+def draw_cowardice():
+
+    if not cowardice_active:
+
+        return
+
+    if game_over:
+
+        return
+
+    # Escape Cowardice is already an instant jumpscare,
+    # so there is no manifestation to render.
+    if cowardice_cause == "exit":
+
+        return
+
+    now = pygame.time.get_ticks()
+
+    elapsed = (
+
+        now
+        - cowardice_start_time
+
+    )
+
+    fade_progress = min(
+
+        1.0,
+
+        elapsed
+        / COWARDICE_FACE_FADE_TIME
+
+    )
+
+    face_alpha = int(
+
+        25
+        +
+        fade_progress * 100
+
+    )
+
+    darkness_alpha = int(
+
+        35
+        +
+        fade_progress * 80
+
+    )
+
+    darkness = pygame.Surface(
+
+        (
+            SCREEN_WIDTH,
+            GAME_HEIGHT
+        ),
+
+        pygame.SRCALPHA
+
+    )
+
+    darkness.fill(
+
+        (
+            0,
+            0,
+            0,
+            darkness_alpha
+        )
+
+    )
+
+    screen.blit(
+
+        darkness,
+        (0, 0)
+
+    )
+
+    text_font = pygame.font.Font(
+
+        None,
+        30
+
+    )
+
+    message = text_font.render(
+
+        "something is omnipresent in this dark environment",
+
+        True,
+
+        (
+            180,
+            180,
+            180
+        )
+
+    )
+
+    message_rect = message.get_rect(
+
+        center=(
+
+            SCREEN_WIDTH // 2,
+            120
+
+        )
+
+    )
+
+    screen.blit(
+
+        message,
+        message_rect
+
+    )
+
+    # --------------------------------------------------------
+    # "coward coward coward"
+    # --------------------------------------------------------
+
+    if elapsed >= 1800:
+
+        coward_font = pygame.font.Font(
+
+            None,
+            42
+
+        )
+
+        flicker_alpha = int(
+
+            140
+            +
+            80
+            *
+            (
+                0.5
+                +
+                0.5
+                *
+                math.sin(
+                    now * 0.012
+                )
+            )
+
+        )
+
+        coward_surface = pygame.Surface(
+
+            (
+                SCREEN_WIDTH,
+                60
+            ),
+
+            pygame.SRCALPHA
+
+        )
+
+        coward_text = coward_font.render(
+
+            "coward coward coward",
+
+            True,
+
+            (
+                180,
+                0,
+                0,
+                flicker_alpha
+            )
+
+        )
+
+        coward_rect = coward_text.get_rect(
+
+            center=(
+
+                SCREEN_WIDTH // 2,
+                GAME_HEIGHT - 110
+
+            )
+
+        )
+
+        coward_surface.blit(
+
+            coward_text,
+            coward_rect
+
+        )
+
+        screen.blit(
+
+            coward_surface,
+            (0, 0)
+
+        )
+
+    draw_cowardice_face(
+        face_alpha
+    )
+
+    # --------------------------------------------------------
+    # Locker-specific warning.
+    # --------------------------------------------------------
+
+    locker_elapsed = (
+
+        now
+        - locker_enter_time
+
+    )
+
+    if locker_elapsed >= (
+
+        get_cowardice_locker_time()
+        + 2500
+
+    ):
+
+        warning_font = pygame.font.Font(
+
+            None,
+            34
+
+        )
+
+        warning = warning_font.render(
+
+            "IT KNOWS YOU ARE HIDING",
+
+            True,
+
+            (
+                200,
+                0,
+                0
+            )
+
+        )
+
+        warning_rect = warning.get_rect(
+
+            center=(
+
+                SCREEN_WIDTH // 2,
+                GAME_HEIGHT // 2 + 220
+
+            )
+
+        )
+
+        screen.blit(
+
+            warning,
+            warning_rect
+
+        )
+
+
+# ============================================================
+# FLUX JUMPSCARE
+# ============================================================
+
+def draw_enemy_2_jumpscare():
+
+    screen.fill(
+        (35, 0, 0)
+    )
+
+    center_x = (
+        SCREEN_WIDTH // 2
+    )
+
+    center_y = (
+        GAME_HEIGHT // 2
+    )
+
+    spike_points = []
+
+    for i in range(24):
+
+        angle = (
+
+            2
+            * math.pi
+            * i
+            / 24
+
+        )
+
+        radius = (
+
+            270
+            if i % 2 == 0
+            else 225
+
+        )
+
+        x = (
+
+            center_x
+            + math.cos(angle)
+            * radius
+
+        )
+
+        y = (
+
+            center_y
+            + math.sin(angle)
+            * radius
+
+        )
+
+        spike_points.append(
+
+            (
+                int(x),
+                int(y)
+            )
+
+        )
+
+    pygame.draw.polygon(
+
+        screen,
+        (5, 5, 5),
+        spike_points
+
+    )
+
+    head_width = 430
+    head_height = 520
+
+    head_rect = pygame.Rect(
+
+        center_x - head_width // 2,
+        center_y - head_height // 2,
+        head_width,
+        head_height
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (8, 8, 8),
+        head_rect
+
+    )
+
+    left_eye = [
+
+        (
+            center_x - 145,
+            center_y - 75
+        ),
+
+        (
+            center_x - 35,
+            center_y - 105
+        ),
+
+        (
+            center_x - 50,
+            center_y - 25
+        ),
+
+        (
+            center_x - 150,
+            center_y - 15
+        )
+
+    ]
+
+    right_eye = [
+
+        (
+            center_x + 35,
+            center_y - 105
+        ),
+
+        (
+            center_x + 145,
+            center_y - 75
+        ),
+
+        (
+            center_x + 150,
+            center_y - 15
+        ),
+
+        (
+            center_x + 50,
+            center_y - 25
+        )
+
+    ]
+
+    pygame.draw.polygon(
+
+        screen,
+        (180, 0, 0),
+        left_eye
+
+    )
+
+    pygame.draw.polygon(
+
+        screen,
+        (180, 0, 0),
+        right_eye
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (0, 0, 0),
+
+        (
+
+            center_x - 105,
+            center_y - 70,
+            35,
+            65
+
+        )
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (0, 0, 0),
+
+        (
+
+            center_x + 70,
+            center_y - 70,
+            35,
+            65
+
+        )
+
+    )
+
+    mouth_rect = pygame.Rect(
+
+        center_x - 155,
+        center_y + 35,
+        310,
+        170
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (90, 0, 0),
+        mouth_rect
+
+    )
+
+    inner_mouth = mouth_rect.inflate(
+
+        -20,
+        -25
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (0, 0, 0),
+        inner_mouth
+
+    )
+
+    for i in range(9):
+
+        tooth_x = (
+
+            center_x
+            - 125
+            + i * 31
+
+        )
+
+        pygame.draw.polygon(
+
+            screen,
+            (220, 220, 200),
+
+            [
+
+                (
+                    tooth_x,
+                    center_y + 45
+                ),
+
+                (
+                    tooth_x + 23,
+                    center_y + 45
+                ),
+
+                (
+                    tooth_x + 11,
+                    center_y + 95
+                )
+
+            ]
+
+        )
+
+    flash = pygame.Surface(
+
+        (
+            SCREEN_WIDTH,
+            GAME_HEIGHT
+        ),
+
+        pygame.SRCALPHA
+
+    )
+
+    flash.fill(
+
+        (
+            255,
+            0,
+            0,
+            35
+        )
+
+    )
+
+    screen.blit(
+
+        flash,
+        (0, 0)
+
+    )
+
+    scare_font = pygame.font.Font(
+
+        None,
+        54
+
+    )
+
+    text = scare_font.render(
+
+        "YOU WERE CAUGHT",
+
+        True,
+
+        (
+            255,
+            255,
+            255
+        )
+
+    )
+
+    text_rect = text.get_rect(
+
+        center=(
+
+            SCREEN_WIDTH // 2,
+            GAME_HEIGHT - 70
+
+        )
+
+    )
+
+    screen.blit(
+
+        text,
+        text_rect
+
+    )
+
+
+# ============================================================
+# COWARDICE JUMPSCARE
+# ============================================================
+
+def draw_cowardice_jumpscare():
+
+    screen.fill(
+        (2, 2, 2)
+    )
+
+    center_x = (
+        SCREEN_WIDTH // 2
+    )
+
+    center_y = (
+        GAME_HEIGHT // 2
+    )
+
+    # Large black head.
+    pygame.draw.ellipse(
+
+        screen,
+        (0, 0, 0),
+
+        (
+
+            center_x - 270,
+            center_y - 300,
+            540,
+            600
+
+        )
+
+    )
+
+    # Eyes.
+    pygame.draw.ellipse(
+
+        screen,
+        (140, 0, 0),
+
+        (
+
+            center_x - 175,
+            center_y - 100,
+            105,
+            70
+
+        )
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (140, 0, 0),
+
+        (
+
+            center_x + 70,
+            center_y - 100,
+            105,
+            70
+
+        )
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (0, 0, 0),
+
+        (
+
+            center_x - 125,
+            center_y - 95,
+            25,
+            60
+
+        )
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (0, 0, 0),
+
+        (
+
+            center_x + 100,
+            center_y - 95,
+            25,
+            60
+
+        )
+
+    )
+
+    # Mouth.
+    mouth = pygame.Rect(
+
+        center_x - 190,
+        center_y + 30,
+        380,
+        210
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (80, 0, 0),
+        mouth
+
+    )
+
+    pygame.draw.ellipse(
+
+        screen,
+        (0, 0, 0),
+
+        mouth.inflate(
+            -25,
+            -30
+        )
+
+    )
+
+    for i in range(11):
+
+        x = (
+
+            center_x
+            - 160
+            + i * 32
+
+        )
+
+        pygame.draw.polygon(
+
+            screen,
+            (220, 220, 200),
+
+            [
+
+                (
+                    x,
+                    center_y + 45
+                ),
+
+                (
+                    x + 22,
+                    center_y + 45
+                ),
+
+                (
+                    x + 11,
+                    center_y + 100
+                )
+
+            ]
+
+        )
+
+    # --------------------------------------------------------
+    # Cowardice-specific text.
+    # --------------------------------------------------------
+
+    font_large = pygame.font.Font(
+
+        None,
+        58
+
+    )
+
+    text = font_large.render(
+
+        "COWARD",
+
+        True,
+
+        (
+            180,
+            0,
+            0
+        )
+
+    )
+
+    rect = text.get_rect(
+
+        center=(
+
+            SCREEN_WIDTH // 2,
+            GAME_HEIGHT - 70
+
+        )
+
+    )
+
+    screen.blit(
+
+        text,
+        rect
+
+    )
+
+
+# ============================================================
+# GENERIC JUMPSCARE
+# ============================================================
+
+def draw_jumpscare():
+
+    if not jumpscare_active:
+
+        return
+
+    if death_cause == "flux":
+
+        draw_enemy_2_jumpscare()
+
+        return
+
+    if death_cause == "cowardice":
+
+        draw_cowardice_jumpscare()
+
+        return
+
+    overlay = pygame.Surface(
+
+        (
+            SCREEN_WIDTH,
+            GAME_HEIGHT
+        ),
+
+        pygame.SRCALPHA
+
+    )
+
+    overlay.fill(
+
+        (
+            120,
+            0,
+            0,
+            220
+        )
+
+    )
+
+    screen.blit(
+
+        overlay,
+        (0, 0)
+
+    )
+
+    scare_text = FONT.render(
+
+        "YOU DIED",
+
+        True,
+
+        (
+            255,
+            255,
+            255
+        )
+
+    )
+
+    scare_rect = scare_text.get_rect(
+
+        center=(
+
+            SCREEN_WIDTH // 2,
+            GAME_HEIGHT // 2
+
+        )
+
+    )
+
+    screen.blit(
+
+        scare_text,
+        scare_rect
+
+    )
 
 # ============================================================
 # TILE EDITOR / INPUTS
