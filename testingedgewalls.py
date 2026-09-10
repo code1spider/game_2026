@@ -1854,7 +1854,378 @@ def setup_enemy_2():
 
     print(f'Flux spawned in room {room_number}')
 
+    print("Flux countdown started: 10 seconds")
 
+# ============================================================
+# Trigger jumpscare
+# ============================================================
+
+def trigger_jumpscare(cause='unknown'):
+
+    global jumpscare_active
+    global game_over
+    global player_locked
+    global death_cause
+
+    if game_over:
+
+        return
+
+    death_cause = cause
+
+    jumpscare_active = True
+    game_over = True
+    player_locked = True
+
+# ============================================================
+# Flux kill
+# ============================================================
+
+def flux_can_kill_player():
+
+    if not flux_is_in_active_phase():
+
+        return False
+
+    if game_over:
+
+        return False
+
+    if is_hiding:
+
+        return False
+
+    return True
+
+# ============================================================
+# update flux
+# ============================================================
+
+def update_enemy_2():
+
+    global spawn_flicker_active
+    global flux_active_start
+    global enemy_active
+    global enemy_position
+    global flux_encounter_finished
+    global flux_department_time
+
+    if not flux_has_appeared
+
+        return
+
+    if flux_encounter_finished:
+
+        return
+
+    now = pygame.time.get_ticks()
+
+# ============================================================
+# lights flicker
+# ============================================================
+
+if spawn_flicker_active:
+
+    if (
+
+        now - spawn_flicker_start
+        >= SPAWN_FLICKER_DURATION
+    ):
+
+    spawn_flicker_active = False
+
+# ============================================================
+# grace period
+# ============================================================
+
+    countdown_elapsed = (
+
+        now
+        - flux_timer_start
+    )
+
+    if countdown_elapsed < FLUX_COUNTDOWN:
+
+        return
+
+# ============================================================
+# flux active
+# ============================================================
+
+    if flux_active_start == 0:
+
+        flux_active_start = now
+
+        print("Flux active")
+
+        print("Flux has 2.5 seconds")
+
+# ============================================================
+# active phase
+# ============================================================
+
+    active_elapsed = (
+ 
+        now
+        - flux_active_start
+ 
+    )
+ 
+    if active_elapsed < FLUX_ACTIVE_DURATION:
+
+        return
+
+# ============================================================
+# flux leaves
+# ============================================================
+
+    enemy_active = False
+    enemy_position = None
+ 
+    flux_encounter_finished = True
+ 
+    spawn_flicker_active = False
+ 
+    flux_departure_time = now
+ 
+    print(
+        "FLUX has disappeared. Encounter finished."
+    )
+ 
+ 
+def update_enemy_flicker():
+ 
+    update_enemy_2()
+
+# ============================================================
+# cowardice locker trigger
+# ============================================================
+
+def trigger_cowardice_locker():
+ 
+    global cowardice_active
+    global cowardice_cause
+    global cowardice_start_time
+ 
+    if game_over:
+ 
+        return
+ 
+    if (
+ 
+        cowardice_active
+        and
+        cowardice_cause == "locker"
+ 
+    ):
+ 
+        return
+ 
+    cowardice_active = True
+ 
+    cowardice_cause = "locker"
+ 
+    cowardice_start_time = (
+        pygame.time.get_ticks()
+    )
+ 
+    print(
+        "COWARDICE has noticed the player hiding."
+    )
+
+# ============================================================
+# update cowardice
+# ============================================================
+
+def update_cowardice():
+
+    if not cowardice_active:
+
+        now = pygame.time.get_ticks()
+
+        if (
+
+            locker_enter_time > 0
+            and
+            now - locker_enter_time
+            >= COWARDICE_LOCKER_TIME
+        ):
+
+            trigger_cowardice_locker()
+
+        return
+    
+    if game_over:
+
+        return
+
+    now = pygame.time.get_ticks()
+
+# ============================================================
+# Locker cowardice
+# ============================================================
+
+    if cowardice_cause == "locker":
+ 
+        if not is_hiding:
+ 
+            reset_cowardice()
+ 
+            return
+ 
+        elapsed = (
+ 
+            now
+            - cowardice_start_time
+ 
+        )
+ 
+        total_time = (
+ 
+            COWARDICE_FACE_FADE_TIME
+            +
+            COWARDICE_JUMPSCARE_DELAY
+ 
+        )
+ 
+        if elapsed >= total_time:
+ 
+            trigger_jumpscare(
+                "cowardice"
+            )
+ 
+            return
+
+# ============================================================
+# exit cowardice
+#this doesnt do anything
+# ============================================================
+
+    elif cowardice_cause == 'exit':
+
+        trigger_jumpscare(
+            'cowardice'
+        )
+
+# ============================================================
+# flux screen shake
+# ============================================================
+
+def get_flux_shake():
+
+    global shake_offset_x
+    global shake_offset_y
+    global last_shake_update
+
+    if is_hiding:
+
+        shake_offset_x = 0
+        shake_offset_y = 0
+
+        return 0, 0
+
+    if not flux_has_appeared:
+
+        shake_offset_x = 0
+        shake_offset_y = 0
+
+        return 0, 0
+
+    now = pygame.time.get_ticks()
+
+    amount 0
+
+    # ========================================================
+    # BEFORE ACTIVE
+    # ========================================================
+ 
+    if (
+ 
+        not flux_encounter_finished
+        and
+        flux_timer_start > 0
+ 
+    ):
+ 
+        elapsed = (
+            now - flux_timer_start
+        )
+ 
+        time_until_active = (
+ 
+            FLUX_COUNTDOWN
+            - elapsed
+ 
+        )
+ 
+        if (
+ 
+            time_until_active > 0
+            and
+            time_until_active <= FLUX_PRE_SHAKE_DURATION
+ 
+        ):
+ 
+            # Mild shake.
+            amount = FLUX_MILD_SHAKE_AMOUNT
+ 
+    # ========================================================
+    # DURING ACTIVE
+    # ========================================================
+ 
+    if flux_is_in_active_phase():
+ 
+        # Strong shake throughout the ENTIRE active phase.
+        amount = FLUX_MAJOR_SHAKE_AMOUNT
+ 
+    # ========================================================
+    # AFTER FLUX LEAVES
+    # ========================================================
+ 
+    elif (
+ 
+        flux_encounter_finished
+        and
+        flux_departure_time > 0
+ 
+    ):
+ 
+        elapsed_since_departure = (
+ 
+            now
+            - flux_departure_time
+ 
+        )
+ 
+        if (
+ 
+            elapsed_since_departure
+            < FLUX_POST_SHAKE_DURATION
+ 
+        ):
+ 
+            # Mild residual shaking.
+            amount = FLUX_MILD_SHAKE_AMOUNT
+ 
+    # ========================================================
+    # NO SHAKE
+    # ========================================================
+
+    if amount <= 0:
+
+        shake_offset_x = 0
+        shake_offset_y = 0
+
+        return 0, 0
+
+    #random shake
+
+    if (
+        now - last_shake_update
+        >= SHAKE_UPDATE_INTERVAL
+    ):
+
+    
 
 # ============================================================
 # TILE EDITOR / INPUTS
