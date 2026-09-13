@@ -149,20 +149,6 @@ last_shake_update = 0
 show_enemy_info = False
 
 # ============================================================
-# ENEMY SETTINGS - temporarily commented out to focus on map
-# ============================================================
-#
-## Enemy settings will eventually be moved here so that enemy behaviour can be changed without digging through the rest of the code.
-#
-#ENEMY_MOVE_COOLDOWN = 100
-#enemny_last_move_time = 0
-#
-#enemy_pos = None
-#enemy_direction = (0, 1)
-#
-#enemy_active = False
-#
-# ============================================================
 # TILE IDs
 # ============================================================
 
@@ -190,28 +176,6 @@ TILE_HEIGHT = 40
 def load_map(map_number):
 
     return [row[:] for row in maps[map_number]]
-
-
-
-
-## ============================================================
-## 2.5D SETTINGS
-## this section has been removed because it draws isometric, I will use faux 3D in its place
-## ============================================================
-#
-#
-#GAME_WIDTH = 800
-#GAME_HEIGHT = 750
-#
-#OBJECT_HEIGHT = 100
-#PLAYER_HEIGHT = 100
-#
-#
-#UI_HEIGHT = 100
-#
-#
-#SCREEN_WIDTH = GAME_WIDTH
-#SCREEN_HEIGHT = GAME_WIDTH + UI_HEIGHT
 
 
 # ============================================================
@@ -432,7 +396,9 @@ def load_image(name, dimensions=None):
 
     try:
 
-        img_surface = pygame.image.load(path).convert_alpha()
+        img_surface = pygame.image.load(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", name)
+        ).convert_alpha()
 
         if isinstance(dimensions, (tuple, list)) and len(dimensions) == 2: #2 because it is needed for the precise length I need I think (More testing later)
             img_surface = pygame.transform.smoothscale(
@@ -1375,47 +1341,42 @@ def get_FLUX_COUNTDOWN():
         remaining
     )
 
-    def flux_is_in_active_phase():
+def flux_is_in_active_phase():
 
-        if not enemy_active:
+    if not enemy_active:
 
-            return False
+        return False
 
-        if flux_encounter_finished:
+    if flux_encounter_finished:
 
-            return False
+        return False
 
-        if flux_active_start == 0:
+    if flux_active_start == 0:
 
-            return False
+        return False
 
+    now = pygame.time.get_ticks()
+
+    active_elapsed = (
+
+        now
+        - flux_active_start
+        )
+
+    return (
+        active_elapsed >= 0
+        and
+        active_elapsed < FLUX_ACTIVE_DURATION
+    )
+
+def flux_active_elapsed():
+        if not flux_is_in_active_phase():
+            return 0
         now = pygame.time.get_ticks()
-
-        active_elapsed = (
-
+        return (
             now
             - flux_active_start
         )
-
-        return (
-            active_elapsed >= 0
-            and
-            active_elapsed < FLUX_ACTIVE_DURATION
-        )
-
-        def flux_active_elapsed():
-
-            if not flux_is_in_active_phase():
-
-                return 0
-
-            now = pygame.time.get_ticks()
-
-            return (
-
-                now
-                - flux_active_start
-            )
 
 # ============================================================
 # cowardice exit trigger
@@ -1435,36 +1396,27 @@ def cowardice_exit_trigger():
 
         return False
 
-        if flux_is_in_active_phase():
-
-            return False
-
-        if(
-            cowardice_active
-            and
-            cowardice_cause == 'exit'
-        ):
-
-            return True
-
-        cowardice_active = True
-        cowardice_cause = 'exit'
-
-        cowardice_start_time = (
-            pygame.get.get_ticks()
-        )
-
-        player_locked = True
-
-        print(
-            'Cowardice: escape attempt'
-        )
-
-        trigger_jumpscare(
-            'cowardice'
-        )
-
+    if flux_is_in_active_phase():
+        return False
+    if(
+        cowardice_active
+        and
+        cowardice_cause == 'exit'
+    ):
         return True
+    cowardice_active = True
+    cowardice_cause = 'exit'
+    cowardice_start_time = (
+        pygame.time.get_ticks()
+    )
+    player_locked = True
+    print(
+        'Cowardice: escape attempt'
+    )
+    trigger_jumpscare(
+        'cowardice'
+    )
+    return True
 
 # ============================================================
 # Next Room
@@ -1870,7 +1822,7 @@ def update_enemy_2():
     global enemy_active
     global enemy_position
     global flux_encounter_finished
-    global flux_department_time
+    global flux_departure_time
 
     if not flux_has_appeared:
 
@@ -2246,6 +2198,142 @@ def draw_enemy_screen_shake():
         game_area,
         (shake_x, shake_y)
     )
+
+# ============================================================
+# ENEMY DEBUG INFO (P KEY)
+# ============================================================
+
+def draw_enemy_info():
+
+    if not show_enemy_info:
+        return
+
+    panel = pygame.Surface(
+        (SCREEN_WIDTH - 40, GAME_HEIGHT - 40),
+        pygame.SRCALPHA
+    )
+    panel.fill((10, 10, 10, 235))
+
+    title_font = pygame.font.Font(None, 34)
+    body_font = pygame.font.Font(None, 24)
+
+    lines = []
+
+    lines.append(f"ENEMY INFORMATION - ROOM {room_number}")
+    lines.append("")
+
+    # --------------------------------------------------------
+    # Enemy 2 / Flux
+    # --------------------------------------------------------
+    lines.append("ENEMY 2 - FLUX")
+    lines.append(
+        f"Spawn chance this room: {get_flux_spawn_chance() * 100:.1f}%"
+    )
+    if room_number < ENEMY_2_FIRST_ROOM:
+        lines.append("Next chance change: Room 50")
+    else:
+        next_checkpoint = get_next_flux_checkpoint()
+        next_chance = min(
+            ENEMY_2_LATER_CHANCE
+            + (next_checkpoint // FLUX_CHANCE_STEP_ROOMS) * FLUX_CHANCE_INCREASE,
+            FLUX_MAX_CHANCE
+        )
+        lines.append(
+            f"Next checkpoint: Room {next_checkpoint} "
+            f"({next_chance * 100:.1f}%)"
+        )
+    lines.append(
+        f"Active duration: {get_flux_active_duration() / 1000:.2f}s "
+        f"(base {FLUX_ACTIVE_DURATION / 1000:.2f}s)"
+    )
+
+    if not flux_has_appeared:
+        lines.append("Status: Not spawned")
+        lines.append("Time to hide: N/A")
+    elif flux_encounter_finished:
+        lines.append("Status: Encounter finished")
+        lines.append("Time to hide: Safe now")
+    elif flux_is_in_active_phase():
+        remaining = max(
+            0,
+            get_flux_active_duration() - flux_active_elapsed()
+        )
+        lines.append("Status: ACTIVE - LETHAL")
+        lines.append(
+            f"Time remaining before Flux leaves: {remaining / 1000:.2f}s"
+        )
+        lines.append("Time to hide: HIDE NOW (locker required)")
+    else:
+        remaining = get_flux_countdown()
+        lines.append("Status: Countdown")
+        lines.append(
+            f"Time until Flux is active: {remaining / 1000:.2f}s"
+        )
+        lines.append("Time to hide: Before countdown reaches 0")
+
+    lines.append(
+        "Leaving room safe: "
+        + ("YES" if flux_leaving_room_is_safe() else "NO")
+    )
+    lines.append(
+        "Hiding stops Flux shake: NO"
+    )
+
+    lines.append("")
+
+    # --------------------------------------------------------
+    # Enemy 3 / Cowardice
+    # --------------------------------------------------------
+    lines.append("ENEMY 3 - COWARDICE")
+    locker_time = get_cowardice_locker_time()
+    lines.append(
+        f"Locker time before Cowardice notices you: {locker_time / 1000:.2f}s"
+    )
+
+    if not cowardice_active:
+        if is_hiding and locker_enter_time > 0:
+            elapsed = pygame.time.get_ticks() - locker_enter_time
+            remaining = max(0, locker_time - elapsed)
+            lines.append(
+                f"Current hidden time: {elapsed / 1000:.2f}s"
+            )
+            lines.append(
+                f"Time until noticed: {remaining / 1000:.2f}s"
+            )
+        else:
+            lines.append("Status: Waiting")
+    else:
+        lines.append(
+            "Status: " + str(cowardice_cause).upper()
+        )
+
+    lines.append(
+        "Leaving locker cancels locker manifestation: YES"
+    )
+    lines.append(
+        "Leaving room safe: "
+        + ("YES" if flux_leaving_room_is_safe() else "NO")
+    )
+
+    lines.append("")
+    lines.append("P = hide/show this information")
+
+    screen.blit(panel, (20, 20))
+
+    y = 35
+    for index, line in enumerate(lines):
+        if index == 0:
+            surf = title_font.render(line, True, (255, 255, 255))
+            screen.blit(surf, (35, y))
+            y += 42
+        elif line in ("ENEMY 2 - FLUX", "ENEMY 3 - COWARDICE"):
+            surf = title_font.render(line, True, (255, 220, 80))
+            screen.blit(surf, (35, y))
+            y += 32
+        else:
+            surf = body_font.render(line, True, (235, 235, 235))
+            screen.blit(surf, (35, y))
+            y += 27
 
 # ============================================================
 # TILE EDITOR / INPUTS
@@ -3989,6 +4077,21 @@ while running:
         #KEYBOARD INPUTS
 
         elif event.type == pygame.KEYDOWN:
+
+            #test rooms
+            if event.key == pygame.K_F8:
+
+                set_test_room(19)
+
+            elif event.key in TEST_ROOM_KEYS:
+
+                set_test_room(
+                    TEST_ROOM_KEYS[event.key]
+                )
+
+            elif event.key == pygame.K_p:
+
+                show_enemy_info = not show_enemy_info
 
             #only works if a box is selected
 
