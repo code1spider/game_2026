@@ -4089,6 +4089,7 @@ while running:
                     TEST_ROOM_KEYS[event.key]
                 )
 
+            #enemy info
             elif event.key == pygame.K_p:
 
                 show_enemy_info = not show_enemy_info
@@ -4097,8 +4098,26 @@ while running:
 
             if event.key == pygame.K_e:
 
-                if exitable():
-                    next_room()
+                if game_over:
+
+                    pass
+
+                elif is_hiding:
+
+                    leave_locker()
+
+                else:
+
+                    locker = find_nearby_locker()
+
+                    if locker is not None:
+
+                        enter_locker(
+                            locker
+                        )
+
+                    elif exitable():
+                        next_room()
 
             if active_box is not None:
 
