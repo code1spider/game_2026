@@ -4163,8 +4163,6 @@ while running:
 
                     input_text[active_box] += event.unicode
 
-    update_enemy_2()
-    update_cowardice()
     check_flux_kill()
 
 
@@ -4190,6 +4188,7 @@ while running:
 
     draw_world()
     draw_enemy_screen_shake()
+    draw_enemy_2_flicker()
 
     draw_room_number()
 
