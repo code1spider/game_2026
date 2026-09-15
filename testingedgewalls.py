@@ -591,6 +591,9 @@ def move_to_next_map():
 
     player_angle = PLAYER_START_ANGLE
 
+    reset_room_state()
+    setup_enemy_2()
+
 # ============================================================
 # OBJECT SETTINGS
 # ============================================================
@@ -639,7 +642,12 @@ def is_wall(x, y):
     tile = get_tile(x, y)
 
     #block movement and vision
-    return tile in (TILE_DEBRIS, TILE_MACHINE, TILE_EXIT)
+    return tile in (
+        TILE_DEBRIS,
+        TILE_MACHINE,
+        TILE_EXIT,
+        TILE_LOCKER
+    )
 
 def player_can_move_to(x, y):
     radius = PLAYER_RADIUS
@@ -1259,6 +1267,7 @@ def set_test_room(target_room):
 
     player_angle = PLAYER_START_ANGLE
     reset_room_state()
+    setup_enemy_2()
 
     print(
         f"TEST: Set to Room {room_number}. "
@@ -1452,6 +1461,10 @@ def next_room():
 def update_player_movement(dt):
 
     global player_x, player_y, player_angle
+
+    if player_locked or is_hiding:
+        return
+
     keys = pygame.key.get_pressed()
 
 
@@ -1534,12 +1547,15 @@ def find_nearby_locker():
             if tile != TILE_LOCKER:
 
                 continue
-        
-        distance = math.hypot(
 
-            player_x - (x + 0.5),
-            player_y - (y + 0.5)
-        )
+            distance = math.hypot(
+                player_x - (x + 0.5),
+                player_y - (y + 0.5)
+            )
+
+            if distance < best_distance:
+                best_distance = distance
+                best = (x, y)
 
     return best
 
@@ -2140,7 +2156,7 @@ def get_flux_shake():
 
     if (
         now - last_shake_update
-        >- SHAKE_UPDATE_INTERVAL
+        >= SHAKE_UPDATE_INTERVAL
         or
         (shake_offset_x == 0 and shake_offset_y == 0)
     ):
@@ -4144,6 +4160,11 @@ while running:
                     input_text[active_box] += event.unicode
 
 
+    # Update timed encounters before movement and rendering.
+    update_enemy_2()
+    update_cowardice()
+    check_flux_kill()
+
     #player movement
 
     update_player_movement(dt)
@@ -4162,10 +4183,14 @@ while running:
     screen.fill((0, 0, 0))
 
     draw_world()
+    draw_enemy_screen_shake()
 
     draw_room_number()
 
     draw_exit_prompt()
+
+    draw_enemy_info()
+    draw_jumpscare()
 
 # removed draw_player() as it's function is already being done by other code
     
