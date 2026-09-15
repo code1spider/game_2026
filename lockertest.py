@@ -1550,14 +1550,13 @@ def find_nearby_locker():
             if tile != TILE_LOCKER:
 
                 continue
-        
-        distance = math.hypot(
 
-            player_x - (x + 0.5),
-            player_y - (y + 0.5)
-        )
+            distance = math.hypot(
+                player_x - (x + 0.5),
+                player_y - (y + 0.5)
+            )
 
-        if distance < best_distance:
+            if distance < best_distance:
                 best_distance = distance
                 best = (x, y)
 
@@ -4172,8 +4171,6 @@ while running:
 
     update_player_movement(dt)
 
-    update_enemy_2()
-    update_cowardice()
 #removed this code to prevent instant leaving
 
 #    if get_tile(player_x, player_y) == TILE_EXIT:
@@ -4190,6 +4187,7 @@ while running:
 
     draw_world()
     draw_enemy_screen_shake()
+    draw_enemy_2_flicker()
 
     draw_room_number()
 

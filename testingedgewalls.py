@@ -647,8 +647,8 @@ def is_wall(x, y):
     #block movement and vision
     return tile in (
         TILE_DEBRIS,
-        TILE_MACHINE, 
-        TILE_EXIT, 
+        TILE_MACHINE,
+        TILE_EXIT,
         TILE_LOCKER
     )
 
@@ -1467,7 +1467,7 @@ def update_player_movement(dt):
 
     if player_locked or is_hiding:
         return
-    
+
     keys = pygame.key.get_pressed()
 
 
@@ -1550,12 +1550,15 @@ def find_nearby_locker():
             if tile != TILE_LOCKER:
 
                 continue
-        
-        distance = math.hypot(
 
-            player_x - (x + 0.5),
-            player_y - (y + 0.5)
-        )
+            distance = math.hypot(
+                player_x - (x + 0.5),
+                player_y - (y + 0.5)
+            )
+
+            if distance < best_distance:
+                best_distance = distance
+                best = (x, y)
 
         if distance < best_distance:
                 best_distance = distance
@@ -4167,6 +4170,11 @@ while running:
     update_cowardice()
     check_flux_kill()
 
+
+    # Update timed encounters before movement and rendering.
+    update_enemy_2()
+    update_cowardice()
+    check_flux_kill()
 
     #player movement
 
