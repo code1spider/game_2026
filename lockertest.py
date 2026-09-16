@@ -1547,25 +1547,24 @@ def find_nearby_locker():
 
     best = None
 
-    best_distance = (
-        LOCKER_INTERACTION_DISTANCE
-    )
+    best_distance = LOCKER_INTERACTION_DISTANCE
 
     for y, row in enumerate(current_map):
 
         for x, tile in enumerate(row):
 
             if tile != TILE_LOCKER:
-
                 continue
-        
-        distance = math.hypot(
 
-            player_x - (x + 0.5),
-            player_y - (y + 0.5)
-        )
+            ## Calculate distance to the centre of this locker
+            distance = math.hypot(
+                player_x - (x + 0.5),
+                player_y - (y + 0.5)
+            )
 
-        if distance < best_distance:
+            ## Check if this is the closest locker within range
+            if distance < best_distance:
+
                 best_distance = distance
                 best = (x, y)
 
@@ -4206,6 +4205,7 @@ while running:
 
     draw_enemy_info()
     draw_jumpscare()
+    draw_cowardice()
 
 # removed draw_player() as it's function is already being done by other code
     
