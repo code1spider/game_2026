@@ -408,6 +408,43 @@ map_seven = [
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ]
 
+sin_escape_map_one = [
+    [2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 5, 0, 0, 0, 0, 6, 2],
+    [2, 0, 2, 2, 2, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 2, 7, 2, 2, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2],
+]
+
+sin_escape_map_two = [
+    [2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 5, 0, 2, 0, 0, 6, 2],
+    [2, 0, 0, 2, 0, 2, 0, 2],
+    [2, 0, 2, 2, 0, 2, 0, 2],
+    [2, 0, 7, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 2, 2, 0, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2],
+]
+
+sin_escape_map_three = [
+    [2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 5, 0, 0, 2, 0, 6, 2],
+    [2, 2, 2, 0, 2, 0, 0, 2],
+    [2, 0, 7, 0, 0, 0, 2, 2],
+    [2, 0, 2, 2, 2, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2],
+]
+
+map_sin_spawn = [
+    [2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 5, 0, 0, 7, 0, 6, 2],
+    [2, 0, 2, 2, 2, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2],
+]
 
 maps = [
     map_one,
@@ -416,9 +453,15 @@ maps = [
     map_four,
     map_five,
     map_six,
-    map_seven
+    map_seven,
+    map_sin_spawn,
+    sin_escape_map_one,
+    sin_escape_map_two,
+    sin_escape_map_three
 ]
 
+SIN_ROOM_MAP_INDEX = 7
+SIN_ESCAPE_MAPS = (8, 9, 10)
 
 # ============================================================
 # LOAD IMAGES
@@ -544,6 +587,96 @@ def reset_cowardice():
     locker_enter_time = 0
 
 # ============================================================
+# SIN
+# ============================================================
+
+def reset_sin():
+    global sin_active
+    global sin_countdown_start
+    global sin_warning_start
+    global sin_next_attack
+    global sin_started_at
+    global sin_attack_active
+    global sin_locker_safe_until
+    global sin_escape_complete
+    sin_active = False
+    sin_countdown_start = 0
+    sin_warning_start = 0
+    sin_next_attack = 0
+    sin_started_at = 0
+    sin_attack_active = False
+    sin_locker_safe_until = 0
+    sin_escape_complete = False
+
+def setup_sin():
+    global sin_countdown_start
+    if room_number == SIN_ROOM:
+        reset_sin()
+        sin_countdown_start = pygame.time.get_ticks()
+        print("Sin countdown started 66.6 seconds")
+
+def sin_is_active_room():
+    return sin_active or room_number == SIN_ROOM
+
+def sin_locker_is_unsafe():
+    return (
+        sin_active
+        and is_hiding
+        and pygame.time.get_ticks() < sin_locker_safe_until
+    )
+
+def update_sin():
+    global sin_active
+    global sin_warning_start
+    global sin_next_attack
+    global sin_attack_active
+    global sin_locker_safe_until
+    global sin_started_at
+    global player_locked
+    global sin_escape_complete
+
+    if sin_escape_complete or game_over:
+        return
+    now = pygame.time.get_ticks()
+    if room_number == SIN_ROOM and not sin_active:
+        if sin_countdown_start == 0:
+            setup_sin()
+            return
+        if sin_warning_start == 0 and now - sin_countdown_start >= SIN_COUNTDOWN:
+            sin_warning_start = now
+            player_locked = True
+            print("SIN HAS APPEARED")
+            return
+        if sin_warning_start and now - sin_warning_start >= SIN_WARNING_DURATION:
+            sin_active = True
+            sin_started_at = now
+            sin_next_attack = now + SIN_ATTACK_INTERVAL
+            player_locked = False
+            print("Sin escape sequence started, return Sin to source")
+        return
+    if not sin_active:
+        return
+    if now - sin_started_at >= SIN_ESCAPE_LIMIT:
+        trigger_jumpscare('sin')
+        return
+    if room_number == SIN_ESCAPE_ROOM:
+        sin_escape_complete = True
+        player_locked = True
+        return
+    if sin_attack_active:
+        if now >= sin_locker_safe_until:
+            sin_attack_active = False
+            sin_next_attack = now + SIN_ATTACK_INTERVAL
+        return
+    if now >= sin_next_attack:
+        sin_attack_active = True
+        sin_locker_safe_until = now + SIN_LOCKER_SAFE_TIME
+        if not is_hiding:
+            trigger_jumpscare('sin')
+        else:
+            print("Sin attacked, player safe")
+
+# ============================================================
 # MAP ROOM PROGRESSION
 # ============================================================
 
@@ -567,10 +700,20 @@ def move_to_next_map():
 
     room_number += 1
 
+    #check for specific maps before going randomly
 
-    # Check if there's a specific connection for the current map
+    if room_number == SIN_ESCAPE_ROOM and sin_active:
+        current_map_number = SIN_ESCAPE_MAPS[
+            (room_number - SIN_ESCAPE_ROOM) % len(SIN_ESCAPE_MAPS)
+        ]
 
-    if current_map_number in specific_map_connections:
+    elif room_number == SIN_ROOM:
+        current_map_number = SIN_ROOM_MAP_INDEX
+    elif sin_active:
+        current_map_number = SIN_ESCAPE_MAPS[
+            (room_number - SIN_ROOM - 1) % len(SIN_ESCAPE_MAPS)
+        ]
+    elif current_map_number in specific_map_connections:
 
         current_map_number = (
             specific_map_connections[current_map_number]
@@ -630,6 +773,7 @@ def move_to_next_map():
 
     reset_room_state()
     setup_enemy_2()
+    setup_sin()
 
 # ============================================================
 # OBJECT SETTINGS
@@ -1208,6 +1352,9 @@ def next_room():
 
 def get_flux_spawn_chance():
 
+    if room_number == SIN_ROOM:
+        return 0.0
+
     if room_number == ENEMY_2_FIRST_ROOM:
         return 1.0
 
@@ -1277,6 +1424,8 @@ def reset_room_state():
     jumpscare_active = False
     player_locked = False
     death_cause = None
+    if not sin_active and room_number != SIN_ROOM:
+        reset_sin()
 
 def set_test_room(target_room):
 
@@ -1289,9 +1438,17 @@ def set_test_room(target_room):
 
     room_number = max(1, min(1000, target_room))
 
-    current_map = load_map(
-        current_map_number
-    )
+    if target_room < SIN_ROOM or target_room > SIN_ESCAPE_ROOM:
+        reset_sin()
+    if target_room == SIN_ROOM:
+        current_map_number = SIN_ROOM_MAP_INDEX
+    elif target_room >= SIN_ESCAPE_ROOM and sin_active:
+        current_map_number = SIN_ESCAPE_MAPS[
+            (target_room - SIN_ESCAPE_ROOM) % len(SIN_ESCAPE_MAPS)
+        ]
+    else: 
+        current_map_number = random.choice(range(7))
+    current_map = load_map(current_map_number)
 
     spawn = find_tile(
         TILE_ENTRANCE,
@@ -1305,7 +1462,8 @@ def set_test_room(target_room):
     player_angle = PLAYER_START_ANGLE
     reset_room_state()
     setup_enemy_2()
-
+    setup_sin()
+    
     print(
         f"TEST: Set to Room {room_number}. "
         f"Flux chance: {get_flux_spawn_chance() * 100:.1f}%"
@@ -1472,6 +1630,10 @@ def next_room():
 
     if not exitable():
 
+        return
+
+    if room_number == SIN_ROOM or sin_active:
+        move_to_next_map()
         return
 
     if flux_is_in_active_phase():
@@ -4134,7 +4296,10 @@ while running:
         elif event.type == pygame.KEYDOWN:
 
             #test rooms
-            if event.key == pygame.K_F8:
+            if event.key == pygame.K_6:
+                set_test_room(665)
+
+            elif event.key == pygame.K_F8:
 
                 set_test_room(19)
 
