@@ -29,27 +29,27 @@ room_number = 1
 # SIN's stats
 # ============================================================
 
-SIN_ROOM = 666
-SIN_ESCAPE_ROOM = 777
-SIN_COUNTDOWN = 66600
-SIN_WARNING_DURATION = 1000
-SIN_ATTACK_INTERVAL = 66600
-SIN_LOCKER_SAFE_TIME = 6660
-SIN_ESCAPE_LIMIT = 666000
-sin_active = False
-sin_countdown_start = 0
-sin_warning_start = 0
-sin_next_attack = 0
-sin_started_at = 0
-sin_attack_active = False
-sin_locker_safe_until = 0
-sin_escape_complete = False
-SIN_WARNING_TEXT = (
-    "ESCAPE SIN- RUN TO ROOM 777, SIN WILL ATTACK EVERY 66.6 seconds "
-    "and you MUST be hidden in a locker, after entering a locker you will "
-    "be unable to leave for 6.66 seconds as Sin will jam it, if you leave early you die "
-    "if you do not reach room 777 withing 666 seconds, sin will instantly kill you to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner ."
-)
+#SIN_ROOM = 666
+#SIN_ESCAPE_ROOM = 777
+#SIN_COUNTDOWN = 66600
+#SIN_WARNING_DURATION = 1000
+#SIN_ATTACK_INTERVAL = 66600
+#SIN_LOCKER_SAFE_TIME = 6660
+#SIN_ESCAPE_LIMIT = 666000
+#sin_active = False
+#sin_countdown_start = 0
+#sin_warning_start = 0
+#sin_next_attack = 0
+#sin_started_at = 0
+#sin_attack_active = False
+#sin_locker_safe_until = 0
+#sin_escape_complete = False
+#SIN_WARNING_TEXT = (
+#    "ESCAPE SIN- RUN TO ROOM 777, SIN WILL ATTACK EVERY 66.6 seconds "
+#    "and you MUST be hidden in a locker, after entering a locker you will "
+#    "be unable to leave for 6.66 seconds as Sin will jam it, if you leave early you die "
+#    "if you do not reach room 777 withing 666 seconds, sin will instantly kill you to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner to torture the sinner ."
+#)
 
 # ============================================================
 # GAME STATE
@@ -65,6 +65,35 @@ enemy_active = False
 
 #Used to stop player movement during an event
 player_locked = False
+
+#Sin settings
+
+Good_ending = False
+
+sin_summoned = False
+sin_banished = False
+sin_evaded = True
+sin_attack_active = False
+sin_attack_number = 0
+
+sin_room_666_start = 0
+sin_spawn_time = 0
+sin_attack_start = 0
+sin_bad_ending = False
+sin_bad_ending_start = 0
+sin_good_ending = False
+sin_good_ending_start = 0
+
+SIN_SUMMON_ROOM = 666
+SIN_BANISHMENT_ROOM = 777
+SIN_FINAL_ROOM = 1000
+
+SIN_SUMMON_TIME = 66600
+SIN_TIME_LIMIT = 666000
+SIN_ATTACK_INTERVAL = 66600
+SIN_ATTACK_DURATION = 6660
+
+
 
 # ============================================================
 # enemy 2
@@ -408,43 +437,43 @@ map_seven = [
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ]
 
-sin_escape_map_one = [
-    [2, 2, 2, 2, 2, 2, 2, 2],
-    [2, 5, 0, 0, 0, 0, 6, 2],
-    [2, 0, 2, 2, 2, 0, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 2],
-    [2, 0, 2, 7, 2, 2, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 2],
-    [2, 2, 2, 2, 2, 2, 2, 2],
-]
-
-sin_escape_map_two = [
-    [2, 2, 2, 2, 2, 2, 2, 2],
-    [2, 5, 0, 2, 0, 0, 6, 2],
-    [2, 0, 0, 2, 0, 2, 0, 2],
-    [2, 0, 2, 2, 0, 2, 0, 2],
-    [2, 0, 7, 0, 0, 0, 0, 2],
-    [2, 0, 0, 0, 2, 2, 0, 2],
-    [2, 2, 2, 2, 2, 2, 2, 2],
-]
-
-sin_escape_map_three = [
-    [2, 2, 2, 2, 2, 2, 2, 2],
-    [2, 5, 0, 0, 2, 0, 6, 2],
-    [2, 2, 2, 0, 2, 0, 0, 2],
-    [2, 0, 7, 0, 0, 0, 2, 2],
-    [2, 0, 2, 2, 2, 0, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 2],
-    [2, 2, 2, 2, 2, 2, 2, 2],
-]
-
-map_sin_spawn = [
-    [2, 2, 2, 2, 2, 2, 2, 2],
-    [2, 5, 0, 0, 7, 0, 6, 2],
-    [2, 0, 2, 2, 2, 0, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 2],
-    [2, 2, 2, 2, 2, 2, 2, 2],
-]
+#sin_escape_map_one = [
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#    [2, 5, 0, 0, 0, 6, 6, 2],
+#    [2, 0, 2, 2, 2, 0, 0, 2],
+#    [2, 0, 0, 0, 0, 0, 0, 2],
+#    [2, 0, 2, 7, 2, 2, 0, 2],
+#    [2, 0, 0, 0, 0, 0, 0, 2],
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#]
+#
+#sin_escape_map_two = [
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#    [2, 5, 0, 2, 0, 6, 6, 2],
+#    [2, 0, 0, 2, 0, 2, 0, 2],
+#    [2, 0, 2, 2, 0, 2, 0, 2],
+#    [2, 0, 7, 0, 0, 0, 0, 2],
+#    [2, 0, 0, 0, 2, 2, 0, 2],
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#]
+#
+#sin_escape_map_three = [
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#    [2, 5, 0, 0, 2, 0, 6, 2],
+#    [2, 2, 2, 0, 2, 0, 6, 2],
+#    [2, 0, 7, 0, 0, 0, 2, 2],
+#    [2, 0, 2, 2, 2, 0, 0, 2],
+#    [2, 0, 0, 0, 0, 0, 0, 2],
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#]
+#
+#map_sin_spawn = [
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#    [2, 5, 0, 0, 7, 0, 6, 2],
+#    [2, 0, 2, 2, 2, 0, 0, 2],
+#    [2, 0, 0, 0, 0, 0, 0, 2],
+#    [2, 2, 2, 2, 2, 2, 2, 2],
+#]
 
 maps = [
     map_one,
@@ -453,15 +482,11 @@ maps = [
     map_four,
     map_five,
     map_six,
-    map_seven,
-    map_sin_spawn,
-    sin_escape_map_one,
-    sin_escape_map_two,
-    sin_escape_map_three
+    map_seven
 ]
 
-SIN_ROOM_MAP_INDEX = 7
-SIN_ESCAPE_MAPS = (8, 9, 10)
+#SIN_ROOM_MAP_INDEX = 7
+#SIN_ESCAPE_MAPS = (8, 9, 10)
 
 # ============================================================
 # LOAD IMAGES
@@ -589,93 +614,93 @@ def reset_cowardice():
 # ============================================================
 # SIN
 # ============================================================
-
-def reset_sin():
-    global sin_active
-    global sin_countdown_start
-    global sin_warning_start
-    global sin_next_attack
-    global sin_started_at
-    global sin_attack_active
-    global sin_locker_safe_until
-    global sin_escape_complete
-    sin_active = False
-    sin_countdown_start = 0
-    sin_warning_start = 0
-    sin_next_attack = 0
-    sin_started_at = 0
-    sin_attack_active = False
-    sin_locker_safe_until = 0
-    sin_escape_complete = False
-
-def setup_sin():
-    global sin_countdown_start
-    if room_number == SIN_ROOM:
-        reset_sin()
-        sin_countdown_start = pygame.time.get_ticks()
-        print("Sin countdown started 66.6 seconds")
-
-def sin_is_active_room():
-    return sin_active or room_number == SIN_ROOM
-
-def sin_locker_is_unsafe():
-    return (
-        sin_active
-        and is_hiding
-        and pygame.time.get_ticks() < sin_locker_safe_until
-    )
-
-def update_sin():
-    global sin_active
-    global sin_warning_start
-    global sin_next_attack
-    global sin_attack_active
-    global sin_locker_safe_until
-    global sin_started_at
-    global player_locked
-    global sin_escape_complete
-
-    if sin_escape_complete or game_over:
-        return
-    now = pygame.time.get_ticks()
-    if room_number == SIN_ROOM and not sin_active:
-        if sin_countdown_start == 0:
-            setup_sin()
-            return
-        if sin_warning_start == 0 and now - sin_countdown_start >= SIN_COUNTDOWN:
-            sin_warning_start = now
-            player_locked = True
-            print("SIN HAS APPEARED")
-            return
-        if sin_warning_start and now - sin_warning_start >= SIN_WARNING_DURATION:
-            sin_active = True
-            sin_started_at = now
-            sin_next_attack = now + SIN_ATTACK_INTERVAL
-            player_locked = False
-            print("Sin escape sequence started, return Sin to source")
-        return
-    if not sin_active:
-        return
-    if now - sin_started_at >= SIN_ESCAPE_LIMIT:
-        trigger_jumpscare('sin')
-        return
-    if room_number == SIN_ESCAPE_ROOM:
-        sin_escape_complete = True
-        player_locked = True
-        return
-    if sin_attack_active:
-        if now >= sin_locker_safe_until:
-            sin_attack_active = False
-            sin_next_attack = now + SIN_ATTACK_INTERVAL
-        return
-    if now >= sin_next_attack:
-        sin_attack_active = True
-        sin_locker_safe_until = now + SIN_LOCKER_SAFE_TIME
-        if not is_hiding:
-            trigger_jumpscare('sin')
-        else:
-            print("Sin attacked, player safe")
-
+#
+#def reset_sin():
+#    global sin_active
+#    global sin_countdown_start
+#    global sin_warning_start
+#    global sin_next_attack
+#    global sin_started_at
+#    global sin_attack_active
+#    global sin_locker_safe_until
+#    global sin_escape_complete
+#    sin_active = False
+#    sin_countdown_start = 0
+#    sin_warning_start = 0
+#    sin_next_attack = 0
+#    sin_started_at = 0
+#    sin_attack_active = False
+#    sin_locker_safe_until = 0
+#    sin_escape_complete = False
+#
+#def setup_sin():
+#    global sin_countdown_start
+#    if room_number == SIN_ROOM:
+#        reset_sin()
+#        sin_countdown_start = pygame.time.get_ticks()
+#        print("Sin countdown started 66.6 seconds")
+#
+#def sin_is_active_room():
+#    return sin_active or room_number == SIN_ROOM
+#
+#def sin_locker_is_unsafe():
+#    return (
+#        sin_active
+#        and is_hiding
+#        and pygame.time.get_ticks() < sin_locker_safe_until
+#    )
+#
+#def update_sin():
+#    global sin_active
+#    global sin_warning_start
+#    global sin_next_attack
+#    global sin_attack_active
+#    global sin_locker_safe_until
+#    global sin_started_at
+#    global player_locked
+#    global sin_escape_complete
+#
+#    if sin_escape_complete or game_over:
+#        return
+#    now = pygame.time.get_ticks()
+#    if room_number == SIN_ROOM and not sin_active:
+#        if sin_countdown_start == 0:
+#            setup_sin()
+#            return
+#        if sin_warning_start == 0 and now - sin_countdown_start >= SIN_COUNTDOWN:
+#            sin_warning_start = now
+#            player_locked = True
+#            print("SIN HAS APPEARED")
+#            return
+#        if sin_warning_start and now - sin_warning_start >= SIN_WARNING_DURATION:
+#            sin_active = True
+#            sin_started_at = now
+#            sin_next_attack = now + SIN_ATTACK_INTERVAL
+#            player_locked = False
+#            print("Sin escape sequence started, return Sin to source")
+#        return
+#    if not sin_active:
+#        return
+#    if now - sin_started_at >= SIN_ESCAPE_LIMIT:
+#        trigger_jumpscare('sin')
+#        return
+#    if room_number == SIN_ESCAPE_ROOM:
+#        sin_escape_complete = True
+#        player_locked = True
+#        return
+#    if sin_attack_active:
+#        if now >= sin_locker_safe_until:
+#            sin_attack_active = False
+#            sin_next_attack = now + SIN_ATTACK_INTERVAL
+#        return
+#    if now >= sin_next_attack:
+#        sin_attack_active = True
+#        sin_locker_safe_until = now + SIN_LOCKER_SAFE_TIME
+#        if not is_hiding:
+#            trigger_jumpscare('sin')
+#        else:
+#            print("Sin attacked, player safe")
+#
 # ============================================================
 # MAP ROOM PROGRESSION
 # ============================================================
@@ -702,18 +727,7 @@ def move_to_next_map():
 
     #check for specific maps before going randomly
 
-    if room_number == SIN_ESCAPE_ROOM and sin_active:
-        current_map_number = SIN_ESCAPE_MAPS[
-            (room_number - SIN_ESCAPE_ROOM) % len(SIN_ESCAPE_MAPS)
-        ]
-
-    elif room_number == SIN_ROOM:
-        current_map_number = SIN_ROOM_MAP_INDEX
-    elif sin_active:
-        current_map_number = SIN_ESCAPE_MAPS[
-            (room_number - SIN_ROOM - 1) % len(SIN_ESCAPE_MAPS)
-        ]
-    elif current_map_number in specific_map_connections:
+    if current_map_number in specific_map_connections:
 
         current_map_number = (
             specific_map_connections[current_map_number]
@@ -773,7 +787,24 @@ def move_to_next_map():
 
     reset_room_state()
     setup_enemy_2()
-    setup_sin()
+
+    ## ========================================================
+    ## SIN ROOM PROGRESSION
+    ## ========================================================
+
+    check_sin_room_progression()
+
+    ## Room 1000 is the final escape check.
+
+    if room_number >= SIN_FINAL_ROOM:
+
+        ## The ending is checked only when Room 1000 is reached.
+
+        if sin_summoned and sin_banished:
+            trigger_sin_good_ending()
+
+        else:
+            trigger_sin_bad_ending()
 
 # ============================================================
 # OBJECT SETTINGS
@@ -1352,8 +1383,8 @@ def next_room():
 
 def get_flux_spawn_chance():
 
-    if room_number == SIN_ROOM:
-        return 0.0
+    #if room_number == SIN_ROOM:
+    #    return 0.0
 
     if room_number == ENEMY_2_FIRST_ROOM:
         return 1.0
@@ -1424,8 +1455,8 @@ def reset_room_state():
     jumpscare_active = False
     player_locked = False
     death_cause = None
-    if not sin_active and room_number != SIN_ROOM:
-        reset_sin()
+#    if not sin_active and room_number != SIN_ROOM:
+#        reset_sin()
 
 def set_test_room(target_room):
 
@@ -1438,16 +1469,16 @@ def set_test_room(target_room):
 
     room_number = max(1, min(1000, target_room))
 
-    if target_room < SIN_ROOM or target_room > SIN_ESCAPE_ROOM:
-        reset_sin()
-    if target_room == SIN_ROOM:
-        current_map_number = SIN_ROOM_MAP_INDEX
-    elif target_room >= SIN_ESCAPE_ROOM and sin_active:
-        current_map_number = SIN_ESCAPE_MAPS[
-            (target_room - SIN_ESCAPE_ROOM) % len(SIN_ESCAPE_MAPS)
-        ]
-    else: 
-        current_map_number = random.choice(range(7))
+    #if target_room < SIN_ROOM or target_room > SIN_ESCAPE_ROOM:
+    #    reset_sin()
+    #if target_room == SIN_ROOM:
+    #    current_map_number = SIN_ROOM_MAP_INDEX
+    #elif target_room >= SIN_ESCAPE_ROOM and sin_active:
+    #    current_map_number = SIN_ESCAPE_MAPS[
+    #        (target_room - SIN_ESCAPE_ROOM) % len(SIN_ESCAPE_MAPS)
+    #    ]
+#
+    #current_map_number = random.choice(range(7))
     current_map = load_map(current_map_number)
 
     spawn = find_tile(
@@ -1462,7 +1493,6 @@ def set_test_room(target_room):
     player_angle = PLAYER_START_ANGLE
     reset_room_state()
     setup_enemy_2()
-    setup_sin()
     
     print(
         f"TEST: Set to Room {room_number}. "
@@ -1632,9 +1662,9 @@ def next_room():
 
         return
 
-    if room_number == SIN_ROOM or sin_active:
-        move_to_next_map()
-        return
+    #if room_number == SIN_ROOM or sin_active:
+    #    move_to_next_map()
+    #    return
 
     if flux_is_in_active_phase():
 
@@ -3813,6 +3843,238 @@ def draw_cowardice_jumpscare():
         rect
 
     )
+
+# ============================================================
+# SIN SYSTEM
+# ============================================================
+
+def start_sin_room_timer():
+
+    global sin_room_666_start
+
+    if sin_room_666_start == 0:
+
+        sin_room_666_start = pygame.time.get_ticks()
+
+        print("Room 666 entered")
+        print("66.6 seconds until sin appears")
+
+def summon_sin():
+
+    global sin_summoned
+    global sin_spawn_time
+    global sin_attack_start
+    global sin_attack_number
+
+    if sin_summoned or sin_banished:
+        return
+
+    sin_summoned = True
+    sin_spawn_time = pygame.time.get_ticks()
+    sin_attack_start = sin_spawn_time
+    sin_attack_number = 0
+
+    print("SIN HAS SPAWNED.")
+    print("You have 666 seconds to reach Room 777.")
+
+
+def trigger_sin_bad_ending():
+
+    global sin_bad_ending
+    global sin_bad_ending_start
+    global player_locked
+
+    if sin_bad_ending or sin_good_ending:
+        return
+
+    sin_bad_ending = True
+    sin_bad_ending_start = pygame.time.get_ticks()
+    player_locked = True
+
+    print("BAD ENDING: You escaped!...B U T  N O T  F R O M  Y O U R  S I N S")
+
+def trigger_sin_good_ending():
+
+    global good_ending
+    global sin_good_ending
+    global sin_good_ending_start
+    global player_locked
+
+    if sin_good_ending:
+        return
+
+    good_ending = True
+    sin_good_ending = True
+    sin_good_ending_start = pygame.time.get_ticks()
+    player_locked = True
+
+    print("SIN DEFEATED")
+    print("GOOD ENDING!")
+
+def update_sin():
+
+    global sin_room_666_start
+    global sin_banished
+    global sin_attack_active
+    global sin_attack_number
+    global sin_attack_start
+
+    now = pygame.time.get_ticks()
+
+    #Room 777 banishes sin (ends sin chase)
+
+    if room_number >= SIN_BANISHMENT_ROOM and sin_summoned:
+
+        if not sin_banished:
+
+            sin_banished = True
+            sin_attack_active = False
+
+            print("HORRORS RETURNED TO SOURCE, BANISHMENT COMPLETE")
+
+        return
+
+    #summoning timer only counts while in room 666
+
+    if room_number == SIN_SUMMON_ROOM and not sin_summoned:
+
+        start_sin_room_timer()
+
+        if now - sin_room_666_start >= SIN_SUMMON_TIME:
+                summon_sin()
+
+        return
+
+    ## Leaving Room 666 before summoning completes cancels the timer.
+
+    if room_number != SIN_SUMMON_ROOM and not sin_summoned:
+        sin_room_666_start = 0
+        sin_attack_active = False
+        return
+
+    ## Sin is inactive before spawning or after banishment.
+
+    if not sin_summoned or sin_banished:
+        sin_attack_active = False
+        return
+
+    ## Reaching the 666-second limit causes a normal death.
+    ## It does NOT trigger the bad ending here.
+
+    if now - sin_spawn_time >= SIN_TIME_LIMIT:
+        sin_attack_active = False
+        trigger_jumpscare("Sin: time limit reached")
+        return
+
+    ## Attacks begin every 66.6 seconds after Sin spawns.
+    ## Each attack lasts 6.66 seconds.
+
+    elapsed_since_attack_cycle = now - sin_attack_start
+
+    if elapsed_since_attack_cycle >= SIN_ATTACK_INTERVAL:
+
+        completed_cycles = elapsed_since_attack_cycle // SIN_ATTACK_INTERVAL
+        sin_attack_start += completed_cycles * SIN_ATTACK_INTERVAL
+        sin_attack_number += completed_cycles
+
+        print(f"Sin attack {sin_attack_number} has begun.")
+
+    attack_elapsed = now - sin_attack_start
+    sin_attack_active = 0 <= attack_elapsed < SIN_ATTACK_DURATION
+
+    ## Sin gives the player a short warning before catching them.
+    ## This prevents an instant death on the exact frame an attack begins.
+    ## The player must enter a locker before the warning ends.
+
+    if (
+        sin_attack_active
+        and attack_elapsed >= SIN_ATTACK_WARNING
+        and not is_hiding
+    ):
+        trigger_jumpscare("Sin: caught during attack")
+
+
+def check_sin_room_progression():
+
+    global sin_banished
+    global sin_attack_active
+
+    if room_number >= SIN_BANISHMENT_ROOM and sin_summoned:
+        sin_banished = True
+        sin_attack_active = False
+
+
+# ============================================================
+# SIN ENDING DRAWING
+# ============================================================
+
+def draw_sin_bad_ending():
+
+    if not sin_bad_ending:
+        return
+
+    elapsed = pygame.time.get_ticks() - sin_bad_ending_start
+
+    overlay = pygame.Surface(
+        (SCREEN_WIDTH, GAME_HEIGHT),
+        pygame.SRCALPHA
+    )
+
+    overlay.fill((0, 0, 0, min(230, 70 + elapsed // 20)))
+    screen.blit(overlay, (0, 0))
+
+    if elapsed < 2500:
+        message = "A SINNER..."
+    elif elapsed < 5000:
+        message = "A SINNER WHO RUNS..."
+    elif elapsed < 7500:
+        message = "A SINNER WHO RUNS FROM THEIR SINS..."
+    else:
+        message = "THERE IS NOWHERE LEFT TO RUN."
+
+    text = FONT.render(message, True, (220, 220, 220))
+    rect = text.get_rect(
+        center=(SCREEN_WIDTH // 2, GAME_HEIGHT // 2)
+    )
+    screen.blit(text, rect)
+
+
+def draw_sin_good_ending():
+
+    if not sin_good_ending:
+        return
+
+    overlay = pygame.Surface(
+        (SCREEN_WIDTH, GAME_HEIGHT),
+        pygame.SRCALPHA
+    )
+
+    overlay.fill((0, 0, 0, 220))
+    screen.blit(overlay, (0, 0))
+
+    title = FONT.render(
+        "SIN HAS BEEN BANISHED",
+        True,
+        (220, 220, 220)
+    )
+
+    title_rect = title.get_rect(
+        center=(SCREEN_WIDTH // 2, GAME_HEIGHT // 2 - 35)
+    )
+
+    screen.blit(title, title_rect)
+
+    ending = FONT.render(
+        "GOOD ENDING",
+        True,
+        (180, 180, 180)
+    )
+
+    ending_rect = ending.get_rect(
+        center=(SCREEN_WIDTH // 2, GAME_HEIGHT // 2 + 25)
+    )
+
+    screen.blit(ending, ending_rect)
 
 
 # ============================================================
