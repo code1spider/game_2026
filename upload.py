@@ -88,7 +88,7 @@ SIN_SUMMON_ROOM = 666
 SIN_BANISHMENT_ROOM = 777
 SIN_FINAL_ROOM = 1000
 
-SIN_SUMMON_TIME = 6600 #this variable should be '66600' for final release, but can otherwise be changed to decrease wait time for testing
+SIN_SUMMON_TIME = 66600
 SIN_TIME_LIMIT = 666000
 SIN_ATTACK_INTERVAL = 66600
 SIN_ATTACK_DURATION = 6660
@@ -498,31 +498,13 @@ maps = [
 
 def load_image(name, dimensions=None):
 
-    ## Find the folder where this Python file is located
-    base_folder = os.path.dirname(
-        os.path.abspath(__file__)
-    )
-
-    ## Find the assets folder
-    assets_folder = os.path.join(
-        base_folder,
-        "assets"
-    )
-
-    ## Find the actual image
-    image_path = os.path.join(
-        assets_folder,
-        name
-    )
-
     try:
 
         img_surface = pygame.image.load(
-            image_path
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", name)
         ).convert_alpha()
 
-        if isinstance(dimensions, (tuple, list)) and len(dimensions) == 2:
-
+        if isinstance(dimensions, (tuple, list)) and len(dimensions) == 2: #2 because it is needed for the precise length I need I think (More testing later)
             img_surface = pygame.transform.smoothscale(
                 img_surface,
                 dimensions
@@ -530,12 +512,10 @@ def load_image(name, dimensions=None):
 
         return img_surface
 
-    except (pygame.error, FileNotFoundError) as e:
-
+    #except statement needed for try function
+    except pygame.error as e:
         raise FileNotFoundError(
-            f"Unable to load image:\n"
-            f"{image_path}\n"
-            f"Error: {e}"
+            f"Unable to load image '{name}': {e}"
         )
 
 
@@ -4008,7 +3988,7 @@ def update_sin():
 
     if (
         sin_attack_active
-        and attack_elapsed >= SIN_ATTACK_DURATION
+        and attack_elapsed >= SIN_ATTACK_WARNING
         and not is_hiding
     ):
         trigger_jumpscare("Sin: caught during attack")
@@ -4657,7 +4637,6 @@ while running:
 
     update_enemy_2()
     update_cowardice()
-    update_sin()
 #removed this code to prevent instant leaving
 
 #    if get_tile(player_x, player_y) == TILE_EXIT:
