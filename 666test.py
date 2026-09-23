@@ -88,7 +88,7 @@ SIN_SUMMON_ROOM = 666
 SIN_BANISHMENT_ROOM = 777
 SIN_FINAL_ROOM = 1000
 
-SIN_SUMMON_TIME = 6600 #this variable should be '66600' for final release, but can otherwise be changed to decrease wait time for testing
+SIN_SUMMON_TIME = 66600 #this variable should be '66600' for final release, but can otherwise be changed to decrease wait time for testing
 SIN_TIME_LIMIT = 666000
 SIN_ATTACK_INTERVAL = 66600
 SIN_ATTACK_DURATION = 6660
@@ -111,7 +111,7 @@ TEST_ROOM_KEYS = {
     pygame.K_g: 400,
     pygame.K_h: 600,
     pygame.K_j: 800,
-    pygame.K_k: 1000,
+    pygame.K_k: 999,
 }
 
 #time until active
@@ -561,9 +561,9 @@ tile_images = {
 # used to get the textures for the wall, roof, and door, these are just placeholders for now
 # ============================================================
 
-wall_texture = load_image("grass.png")
-roof_texture = load_image("water.png")
-door_texture = load_image("enemy.png")
+wall_texture = load_image("wall_bricks.png")
+roof_texture = load_image("doorshadow.png")
+door_texture = load_image("locker.png")
 
 try:
     
