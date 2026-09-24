@@ -112,6 +112,10 @@ TEST_ROOM_KEYS = {
     pygame.K_h: 600,
     pygame.K_j: 800,
     pygame.K_k: 999,
+    pygame.K_v: 249,
+    pygame.K_b: 499,
+    pygame.K_n: 749,
+    pygame.K_m: 994,
 }
 
 #time until active
@@ -545,17 +549,18 @@ def load_image(name, dimensions=None):
 
 # Only the images actually used by map 1
 
-tile_images = {
-    0: load_image("floor.png"),
-    1: load_image("path.png"),
-    2: load_image("debris.png"),
-    3: load_image("machine.png"),
-    4: load_image("floor.png"),
-    5: load_image("doorshadow.png"),
-    6: load_image("doorshadow.png"),
-    7: load_image('locker.png')
-}
+#tile images code fixed to hopefully avoid persistent issue
 
+tile_images = {
+    TILE_FLOOR,
+    TILE_PATH,
+    TILE_DEBRIS,
+    TILE_MACHINE,
+    TILE_FLOOR_ALT,
+    TILE_ENTRANCE,
+    TILE_EXIT,
+    TILE_LOCKER
+}
 # ============================================================
 # FAUX 3D TEXTURES
 # used to get the textures for the wall, roof, and door, these are just placeholders for now
