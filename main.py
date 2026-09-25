@@ -26,6 +26,118 @@ last_move_time = 0
 room_number = 1
 
 # ============================================================
+# ON-SCREEN MESSAGE SYSTEM
+# ============================================================
+
+screen_message = ""
+screen_message_start = 0
+SCREEN_MESSAGE_DURATION = 20000  # 20 seconds
+
+
+def show_screen_message(message):
+    global screen_message
+    global screen_message_start
+
+    screen_message = message
+    screen_message_start = pygame.time.get_ticks()
+
+
+def draw_screen_message():
+    if not screen_message:
+        return
+
+    elapsed = pygame.time.get_ticks() - screen_message_start
+
+    # Message has expired
+    if elapsed >= SCREEN_MESSAGE_DURATION:
+        return
+
+    # Dark transparent background
+    overlay = pygame.Surface((SCREEN_WIDTH, GAME_HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    screen.blit(overlay, (0, 0))
+
+    # Main message
+    message_font = pygame.font.Font(None, 42)
+
+    #max width
+    max_width = SCREEN_WIDTH - 100
+
+    #adjust lines to fit
+
+    wrapped_lines = []
+
+    for paragraph in screen_message.split("n"):
+        words = paragraph.split()
+        current_line = ""
+
+        for word in words:
+            test_line = current_line + (" " if current_line else "") + word
+
+            if message_font.size(test_line)[0] <= max_width:
+                current_line = test_line
+            else:
+                if current_line:
+                    wrapped_lines.append(current_line)
+
+                current_line = word
+
+        if current_line:
+            wrapped_lines.append(current_line)
+
+    # Work out total height
+    line_height = 48
+    total_height = len(wrapped_lines) * line_height
+
+    start_y = (GAME_HEIGHT - total_height) // 2
+
+    # Draw every line
+    for i, line in enumerate(wrapped_lines):
+
+        text = message_font.render(
+            line,
+            True,
+            (255, 255, 255)
+        )
+
+        rect = text.get_rect(
+            center=(
+                SCREEN_WIDTH // 2,
+                start_y + i * line_height
+            )
+        )
+
+        screen.blit(text, rect)
+
+ROOM_MESSAGES = {
+
+    0:
+        "ROOM 0\n"
+        "Hello. Are you lost human?\n"
+        "This place can help those who are ready, but expect turmoil more than you are used to from other programs.",
+
+    250:
+        "ROOM 250\n"
+        "Surprise! you made it this far.\n"
+        "Balance is going to be the key to keeping your mind free and sane from it's influence.",
+
+    500:
+        "ROOM 500\n"
+        "Halfway there, always go forward, never go, or come, back.\n"
+        "Keep going.",
+
+    750:
+        "ROOM 750\n"
+        "The final stretch.\n"
+        "Knowing your shadows that still haunt you can greatly help you, but if you haven't escaped it then be ready to see what you'd rather not be.\n",
+
+    995:
+        "ROOM 995\n"
+        "You did it!\n"
+        "nothing left to do now. Just go towards the light.\n",
+    }
+
+# ============================================================
 # SIN's stats
 # ============================================================
 
@@ -112,19 +224,50 @@ TEST_ROOM_KEYS = {
     pygame.K_h: 600,
     pygame.K_j: 800,
     pygame.K_k: 999,
+    pygame.K_v: 249,
+    pygame.K_b: 499,
+    pygame.K_n: 749,
+    pygame.K_m: 994,
 }
 
 #time until active
 
 FLUX_COUNTDOWN = 10000
 
-#active duration
 FLUX_ACTIVE_DURATION = 2500
 FLUX_SHAKE_DURATION = 2000
 ENEMY_SHAKE_AMOUNT = 5
 
 #lights flicker
 SPAWN_FLICKER_DURATION = 2000
+
+def draw_flux_locker_sprint():
+
+    if not player_in_locker:
+        return
+
+    if not enemy_2_active:
+        return
+
+    if not flux_locker_sprint_active:
+        return
+
+    # Draw Flux moving across the locker view
+    flux_image = pygame.transform.scale(
+        enemy_2_image,
+        (220, 220)
+    )
+
+    rect = flux_image.get_rect(
+        center=(
+            flux_locker_sprint_x,
+            GAME_HEIGHT // 2
+        )
+    )
+
+    screen.blit(flux_image, rect)
+
+
 
 # ============================================================
 # screen shake
@@ -545,17 +688,18 @@ def load_image(name, dimensions=None):
 
 # Only the images actually used by map 1
 
-tile_images = {
-    0: load_image("floor.png"),
-    1: load_image("path.png"),
-    2: load_image("debris.png"),
-    3: load_image("machine.png"),
-    4: load_image("floor.png"),
-    5: load_image("doorshadow.png"),
-    6: load_image("doorshadow.png"),
-    7: load_image('locker.png')
-}
+#tile images code fixed to hopefully avoid persistent issue
 
+tile_images = {
+    TILE_FLOOR,
+    TILE_PATH,
+    TILE_DEBRIS,
+    TILE_MACHINE,
+    TILE_FLOOR_ALT,
+    TILE_ENTRANCE,
+    TILE_EXIT,
+    TILE_LOCKER
+}
 # ============================================================
 # FAUX 3D TEXTURES
 # used to get the textures for the wall, roof, and door, these are just placeholders for now
@@ -744,6 +888,11 @@ def move_to_next_map():
     global room_number
 
     room_number += 1
+
+    #check for messages
+
+    if room_number in ROOM_MESSAGES:
+        show_screen_message(ROOM_MESSAGES[room_number])
 
     #check for specific maps before going randomly
 
@@ -1255,7 +1404,7 @@ def draw_world():
     
         if tile == TILE_EXIT:
         
-            current_wall_texture = door_texture
+            current_wall_texture = locker_texture
 
         elif tile == TILE_LOCKER:
 
@@ -1924,6 +2073,147 @@ def leave_locker():
         )
 
 # ============================================================
+# FLUX LOCKER RED DOT
+# ============================================================
+
+flux_locker_x = -50
+flux_locker_direction = 1
+flux_locker_running = False
+flux_locker_last_pass = 0
+
+FLUX_LOCKER_SPEED = 25
+FLUX_LOCKER_INTERVAL = 0
+FLUX_LOCKER_RADIUS = 30
+
+
+def update_flux_locker_visual():
+
+    global flux_locker_x
+    global flux_locker_direction
+    global flux_locker_running
+    global flux_locker_last_pass
+
+    #nnly happens while the player is hiding
+    if not is_hiding:
+        flux_locker_running = False
+        return
+
+    #happens while Flux is actually active
+    if not flux_is_in_active_phase():
+        flux_locker_running = False
+        return
+
+    now = pygame.time.get_ticks()
+
+    #wait a couple of seconds before each pass
+    if not flux_locker_running:
+
+        if now - flux_locker_last_pass >= FLUX_LOCKER_INTERVAL:
+
+            flux_locker_running = True
+            flux_locker_last_pass = now
+
+            if flux_locker_direction == 1:
+                flux_locker_x = -FLUX_LOCKER_RADIUS
+            else:
+                flux_locker_x = (
+                    SCREEN_WIDTH + FLUX_LOCKER_RADIUS
+                )
+
+    # m ove the red dot
+    if flux_locker_running:
+
+        flux_locker_x += (
+            FLUX_LOCKER_SPEED
+            * flux_locker_direction
+        )
+
+        # reached right side
+        if (
+            flux_locker_direction == 1
+            and
+            flux_locker_x >
+            SCREEN_WIDTH + FLUX_LOCKER_RADIUS
+        ):
+
+            flux_locker_running = False
+            flux_locker_direction = -1
+
+        elif (
+            flux_locker_direction == -1
+            and
+            flux_locker_x < -FLUX_LOCKER_RADIUS
+        ):
+
+            flux_locker_running = False
+            flux_locker_direction = 1
+
+
+def draw_flux_locker_visual():
+
+    if not is_hiding:
+        return
+
+    if not flux_is_in_active_phase():
+        return
+
+    if not flux_locker_running:
+        return
+
+    # create a small transparent surface for the glow
+    size = FLUX_LOCKER_RADIUS * 6
+
+    glow = pygame.Surface(
+        (size, size),
+        pygame.SRCALPHA
+    )
+
+    center = (
+        size // 2,
+        size // 2
+    )
+
+    # Outer glow
+    pygame.draw.circle(
+        glow,
+        (255, 0, 0, 35),
+        center,
+        FLUX_LOCKER_RADIUS * 3
+    )
+
+    # Middle glow
+    pygame.draw.circle(
+        glow,
+        (255, 0, 0, 80),
+        center,
+        FLUX_LOCKER_RADIUS * 2
+    )
+
+    # main red dot
+    pygame.draw.circle(
+        glow,
+        (255, 0, 0, 255),
+        center,
+        FLUX_LOCKER_RADIUS
+    )
+
+    #Bright centre
+    pygame.draw.circle(
+        glow,
+        (255, 100, 100, 255),
+        center,
+        8
+    )
+
+    screen.blit(
+        glow,
+        (
+            flux_locker_x - size // 2,
+            GAME_HEIGHT // 2 - size // 2
+        )
+    )
+
+# ============================================================
 # set flux
 # ============================================================
 
@@ -2034,6 +2324,41 @@ def trigger_jumpscare(cause='unknown'):
     jumpscare_active = True
     game_over = True
     player_locked = True
+
+    #text based on what entity kills you
+
+    if cause == "flux":
+        show_screen_message(
+            "FLUX GOT YOU.\n"
+            "Keep moving and watch for the warning signs.\n"
+            "You can avoid it next time.\n"
+            "Good luck."
+        )
+
+    elif cause == "cowardice":
+        show_screen_message(
+            "COWARDICE FOUND YOU.\n"
+            "Use the lockers when you need to hide.\n"
+            "Don't stay exposed when it is nearby.\n"
+            "You can do this."
+
+        )
+
+    elif cause == "sin":
+        show_screen_message(
+            "SIN GOT YOU.\n"
+            "Pay attention to its attack pattern.\n"
+            "Get inside a locker and stay hidden\n"
+            "until the attack is over.\n"
+            "Good luck."
+        )
+
+    else:
+        show_screen_message(
+            "YOU DIED.\n"
+            "Figure out what killed you and try again.\n"
+            "You've got this."
+        )
 
 # ============================================================
 # Flux kill
@@ -4527,6 +4852,28 @@ SCREEN_WIDTH // 2, 70
         text_rect
     )
 
+def draw_flux_locker_visual():
+
+    if not is_hiding:
+        return
+
+    if not flux_is_in_active_phase():
+        return
+
+    now = pygame.time.get_ticks()
+
+    x = (
+        (now % 2000)
+        / 2000
+        * SCREEN_WIDTH
+    )
+
+    pygame.draw.circle(
+        screen,
+        (255, 0, 0),
+        (int(x), GAME_HEIGHT // 2),
+        30
+    )
 
 # ============================================================
 # MAIN GAME LOOP
@@ -4658,6 +5005,8 @@ while running:
     update_enemy_2()
     update_cowardice()
     update_sin()
+
+    update_flux_locker_visual
 #removed this code to prevent instant leaving
 
 #    if get_tile(player_x, player_y) == TILE_EXIT:
@@ -4683,6 +5032,10 @@ while running:
     draw_enemy_info()
     draw_jumpscare()
     draw_cowardice()
+
+    draw_flux_locker_visual()
+
+    draw_screen_message()
 
 # removed draw_player() as it's function is already being done by other code
     
