@@ -496,7 +496,7 @@ map_three = [
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
-    [2, 0, 0, 0, 0, 5, 5, 0, 3, 0, 0, 2],
+    [2, 0, 0, 0, 0, 5, 5, 0, 2, 0, 0, 2],
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ]
 
@@ -516,7 +516,7 @@ map_four = [
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
-    [2, 0, 0, 0, 0, 5, 5, 0, 3, 0, 0, 2],
+    [2, 0, 0, 0, 0, 5, 5, 0, 2, 0, 0, 2],
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ]
 
@@ -536,7 +536,7 @@ map_five = [
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
-    [2, 0, 0, 0, 0, 5, 5, 0, 3, 0, 0, 2],
+    [2, 0, 0, 0, 0, 5, 5, 0, 2, 0, 0, 2],
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ]
 
@@ -556,7 +556,7 @@ map_six = [
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
-    [2, 0, 0, 0, 0, 5, 5, 0, 3, 0, 0, 2],
+    [2, 0, 0, 0, 0, 5, 5, 0, 2, 0, 0, 2],
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ]
 
@@ -576,7 +576,7 @@ map_seven = [
     [2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 2],
     [2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
-    [2, 0, 0, 0, 0, 5, 5, 0, 3, 0, 0, 2],
+    [2, 0, 0, 0, 0, 5, 5, 0, 2, 0, 0, 2],
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ]
 
@@ -4221,6 +4221,9 @@ def summon_sin():
 
     print("SIN HAS SPAWNED.")
     print("You have 666 seconds to reach Room 777.")
+    show_screen_message(
+            "RUN\n"
+            "NOW")
 
 
 def trigger_sin_bad_ending():
@@ -4236,7 +4239,16 @@ def trigger_sin_bad_ending():
     sin_bad_ending_start = pygame.time.get_ticks()
     player_locked = True
 
-    print("BAD ENDING: You escaped!...B U T  N O T  F R O M  Y O U R  S I N S")
+    show_screen_message(
+            "BAD ENDING.\n"
+            "YOU ESCAPED, BUT NOT FROM YOUR SINS.\n"
+            "SIN...SIN...SIN...ROOM 666...\n"
+            "IT WAITS 66.6 SECONDS TO HUNT\n"
+            "IT WILL ATTACK EVERY 66.6 SECONDS\n"
+            "IT HATES 777. 777 WILL BANISH IT\n"
+            "IF YOU DONT REACH ROOM 777 in 666 SECONDS...\n"
+            "IT WILL SHOW NO MERCY\n"
+        )
 
 def trigger_sin_good_ending():
 
@@ -4255,6 +4267,12 @@ def trigger_sin_good_ending():
 
     print("SIN DEFEATED")
     print("GOOD ENDING!")
+    show_screen_message(
+    "AND IN THE END THERE WAS SILENCE\n"
+    "WITH THE HORRORS OF YOUR SINS LEFT BEHIND IN A FLEDGING GAME\n"
+    "ONE MUST TRULY ASK WHAT IT MEANS TO RID YOURSELF OF THE PAST AND WHO CAN DO IT\n"
+    "...Never come back here never come back to these horrors...\n"
+    )
 
 def update_sin():
 
@@ -4276,6 +4294,7 @@ def update_sin():
             sin_attack_active = False
 
             print("HORRORS RETURNED TO SOURCE, BANISHMENT COMPLETE")
+            
 
         return
 
@@ -4347,6 +4366,9 @@ def check_sin_room_progression():
     if room_number >= SIN_BANISHMENT_ROOM and sin_summoned:
         sin_banished = True
         sin_attack_active = False
+        show_screen_message(
+        "HORRORS RETURNED TO SOURCE, BANISHMENT COMPLETE. RUN TO EXIT")
+        
 
 
 # ============================================================
